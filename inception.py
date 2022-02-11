@@ -157,7 +157,7 @@ def objective(config, dataset_name, run, output_dir=None):
 
     callbacks = [reduce_lr, model_checkpoint]
 
-    # model.summary()
+    model.summary()
 
     model.save_weights(output_directory + 'model_init.hdf5')
 
@@ -206,6 +206,12 @@ def objective(config, dataset_name, run, output_dir=None):
 
     tf.keras.backend.clear_session()
 
+    if type(config['use_residual']) == bool:
+        pass
+    else:
+        config['use_residual'] = bool(config['use_residual'])
+
+
     if run:
         with open(root_dir + '/Results/' + '%s%s.json' % (run, dataset_name), 'a+') as f:
             json.dump({'dataset': dataset_name,
@@ -213,8 +219,8 @@ def objective(config, dataset_name, run, output_dir=None):
                        'nb_filters': config['nb_filters'],
                        'batch_size': config['batch_size'],
                        'kernel_size': config['kernel_size'],
-                       'use_residual': config['use_residual'],
-                       'use_bottleneck': config['use_bottleneck'],
+                       'use_residual': 'True' if config['use_residual'] else 'False',
+                       'use_bottleneck': 'True' if config['use_bottleneck'] else 'False',
                        'acc': df_metrics2['accuracy'][0],
                        'precision': df_metrics2['precision'][0],
                        'recall': df_metrics2['recall'][0],

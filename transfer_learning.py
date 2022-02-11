@@ -34,7 +34,7 @@ def prepare_data(datasets_dict, dataset_name):
 
 
 def train(pre_model=None, config=None, datasets_dict=None, dataset_name=None,
-          dataset_name_tranfer=None, file_path=None, callbacks=None, write_output_dir=None):
+          dataset_name_tranfer=None, write_output_dir=None):
 
     # read train, val and test sets
     x_train = datasets_dict[dataset_name_tranfer][0]
@@ -69,6 +69,15 @@ def train(pre_model=None, config=None, datasets_dict=None, dataset_name=None,
         x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
         x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
 
+    # for the new tranfered re-trained model
+    file_path = write_output_dir + 'best_model.hdf5'
+    # callbacks : reduce learning rate
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50, min_lr=0.0001)
+    # model checkpoint
+    model_checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
+                                                          save_best_only=True)
+    callbacks = [reduce_lr, model_checkpoint]
+
     start_time = time.time()
     # remove last layer to replace with a new one
     # input_shape = (None, x_train.shape[2])
@@ -79,7 +88,7 @@ def train(pre_model=None, config=None, datasets_dict=None, dataset_name=None,
 
     # b = model.layers[1].get_weights()
 
-    hist = model.fit(x_train, y_train, batch_size=mini_batch_size, epochs=1500,
+    hist = model.fit(x_train, y_train, batch_size=mini_batch_size, epochs=15,
                      verbose=True, validation_data=(x_test, y_test), callbacks=callbacks)
 
     # a = model.layers[1].get_weights()
@@ -118,8 +127,8 @@ def train(pre_model=None, config=None, datasets_dict=None, dataset_name=None,
                    'nb_filters': config['nb_filters'],
                    'batch_size': config['batch_size'],
                    'kernel_size': config['kernel_size'],
-                   'use_residual': config['use_residual'],
-                   'use_bottleneck': config['use_bottleneck'],
+                   'use_residual': 'True' if config['use_residual'] else 'False',
+                   'use_bottleneck': 'True' if config['use_bottleneck'] else 'False',
                    'acc': df_metrics2['accuracy'][0],
                    'precision': df_metrics2['precision'][0],
                    'recall': df_metrics2['recall'][0],

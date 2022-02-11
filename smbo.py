@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import norm
 
 
-def expected_improvement(X, X_sample, Y_sample, gpr, xi=0.1):
+def expected_improvement(X, X_sample, Y_sample, gpr, xi=0.05):
     '''
     Computes the EI at points X based on existing samples X_sample
     and Y_sample using a Gaussian process surrogate model.

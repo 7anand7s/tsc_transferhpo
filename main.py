@@ -16,8 +16,8 @@ from utils.constants import UNIVARIATE_DATASET_NAMES, UNIVARIATE_ARCHIVE_NAMES
 from utils.utils import read_all_datasets
 
 
-def get_conf2(ind):
-    temp2 = grid_matrix[ind, :].astype(int)
+def get_conf2(ind, grid_matrixx):
+    temp2 = grid_matrixx[ind, :].astype(int)
 
     conf2 = {'depth': int(temp2[4]), 'nb_filters': int(temp2[2]),
              'batch_size': int(temp2[3]), 'kernel_size': int(temp2[5]),
@@ -194,12 +194,25 @@ if sys.argv[1] == 'transfer_learning':
     datasets_dict = read_all_datasets(root_dir + '/data', UNIVARIATE_ARCHIVE_NAMES[0])
     # loop through all datasets
     for dataset_name in UNIVARIATE_DATASET_NAMES:
-        # get the directory of the model for this current dataset_name
+
+        # # load the model to transfer to other datasets
+        # pre_model = tf.keras.models.load_model(output_dir + 'best_model.hdf5')
+        #
+        # # output file path for the new tranfered re-trained model
+        # file_path = write_dir_root + '/' + dataset_name + '/' + dataset_name_tranfer + 'best_model.hdf5'
+        #
+        # # callbacks : reduce learning rate
+        # reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50, min_lr=0.0001)
+        #
+        # # model checkpoint
+        # model_checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
+        #                                                       save_best_only=True)
+        # callbacks = [reduce_lr, model_checkpoint]
+        #
+        # get the directory of the model for this current dataset_name#
         output_dir = results_dir + '/SMBO/BestModel_' + dataset_name + '/'
-        # loop through all the datasets to transfer to the learning
-        dataset_dir = write_dir_root + '/' + dataset_name
-        if not os.path.exists(dataset_dir):
-            os.mkdir(dataset_dir)
+        if not os.path.exists(write_dir_root + '/' + dataset_name):
+            os.mkdir(write_dir_root + '/' + dataset_name)
 
         pd_df = pd.read_csv('/home/anand7s/PycharmProjects/tsc_transferhpo/Results/datassimilar-datasets_hwaz_m.csv')
         k_nn = np.where(pd_df['dataset'] == dataset_name, pd_df['K_1'], 0)
@@ -212,36 +225,25 @@ if sys.argv[1] == 'transfer_learning':
         iter_ran = 0
         no_iter = 50
 
-        # set the output directory to write new transfer learning results
-        write_output_dir = dataset_dir + '/' + dataset_name_tranfer + '/'
-
-        if not os.path.exists(write_output_dir):
-            os.mkdir(write_output_dir)
-
         print('Tranfering from ' + dataset_name + ' to ' + dataset_name_tranfer)
-        # load the model to transfer to other datasets
-        pre_model = tf.keras.models.load_model(output_dir + 'best_model.hdf5')
+
         top5_configs = []
         for counting in range(1, 6):
             b_file = open(output_dir + "bestconfig" + str(counting) + ".pkl", "rb")
             confi = pickle.load(b_file)
             top5_configs.append(confi)
 
-        # output file path for the new tranfered re-trained model
-        file_path = write_output_dir + 'best_model.hdf5'
-        # callbacks : reduce learning rate
-        reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50, min_lr=0.0001)
-        # model checkpoint
-        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
-                                                              save_best_only=True)
-        callbacks = [reduce_lr, model_checkpoint]
-
         gridMatrix = create_gridm()
         dim = 6
         Xt_init = []
-        Yt_init = []
-        index = None
+
+        if dataset_name_tranfer == 'Adiac':
+            Yt_init = [0.7979539641943734, 0.7749360613810742, 0.8209718670076727, 0.8312020460358056,
+                       0.782608695652174]
+        else:
+            Yt_init = []
         for confi in top5_configs:
+
             temp_l = np.array([confi['use_residual'], confi['use_bottleneck'], confi['nb_filters'],
                                confi['batch_size'], confi['depth'], confi['kernel_size']])
             # temp_l = temp_l.reshape(-1, dim)
@@ -249,21 +251,26 @@ if sys.argv[1] == 'transfer_learning':
                 cc = 0
                 for j, k in zip(matrix, temp_l):
                     cc = cc + 1 if j == k else cc
-                index = i if cc == 6 else None
+                if cc == 6:
+                    index = i
 
-            tempo = train(pre_model, confi, datasets_dict, dataset_name,
-                          dataset_name_tranfer, file_path, callbacks, write_output_dir)
+            if dataset_name_tranfer == 'Adiac':
+                pass
+            else:
+                tempo = objective(confi, dataset_name=dataset_name_tranfer, run='Transfer_learning_run_',
+                                  output_dir=write_dir_root + '/' + dataset_name + '/')
+                Yt_init.append(tempo)
 
             Xt_init.append(gridMatrix[index, :].astype(int))
-            Yt_init.append(tempo)
 
-            gridMatrix = np.delete(gridMatrix, index, 0)
+            gridMatrix = np.delete(gridMatrix, int(index), 0)
 
         # Initialize samples
         Xt_sample = np.array(Xt_init).reshape(-1, dim)
         Yt_sample = np.array(Yt_init).reshape(-1, 1)
 
         while iter_ran < no_iter:
+
             # Update Gaussian process with existing samples
             gpr.fit(Xt_sample, Yt_sample)
 
@@ -276,9 +283,9 @@ if sys.argv[1] == 'transfer_learning':
                 continue
 
             # objective
-            confi = get_conf2(int(index))
-            Y_temp = train(pre_model, confi, datasets_dict, dataset_name,
-                           dataset_name_tranfer, file_path, callbacks, write_output_dir)
+            confi = get_conf2(int(index), gridMatrix)
+            Y_temp = objective(confi, dataset_name=dataset_name_tranfer, run='Transfer_learning_run_',
+                               output_dir=write_dir_root + '/' + dataset_name + '/')
             Y_next = np.array(Y_temp)
 
             X_val = gridMatrix[int(index), :].astype(int)
@@ -288,7 +295,7 @@ if sys.argv[1] == 'transfer_learning':
             X_sample = np.vstack((Xt_sample, X_val))
             Y_sample = np.vstack((Yt_sample, Y_val))
 
-            grid_matrix = np.delete(gridMatrix, int(index), 0)
+            gridMatrix = np.delete(gridMatrix, int(index), 0)
             iter_ran += 1
 
 if sys.argv[1] == 'plot_graphs':
