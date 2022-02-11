@@ -84,7 +84,7 @@ def _inception_module(input_tensor, use_bottleneck, nb_filters, kernel_size, str
     return x
 
 
-root_dir = '/home/anand7s/PycharmProjects/tsc_transferhpo'
+root_dir = '/home/fr/fr_fr/fr_aa367/tsc_transferhpo'
 
 
 def objective(config, dataset_name, run, output_dir=None):

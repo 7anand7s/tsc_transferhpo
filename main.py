@@ -58,7 +58,7 @@ def create_gridm():
     return gridm_matrix
 
 
-root_dir = '/home/anand7s/PycharmProjects/tsc_transferhpo'
+root_dir = '/home/fr/fr_fr/fr_aa367/tsc_transferhpo'
 results_dir = root_dir + '/Results'
 
 if sys.argv[1] == 'hpo_smbo':
@@ -214,7 +214,7 @@ if sys.argv[1] == 'transfer_learning':
         if not os.path.exists(write_dir_root + '/' + dataset_name):
             os.mkdir(write_dir_root + '/' + dataset_name)
 
-        pd_df = pd.read_csv('/home/anand7s/PycharmProjects/tsc_transferhpo/Results/datassimilar-datasets_hwaz_m.csv')
+        pd_df = pd.read_csv('/home/fr/fr_fr/fr_aa367/tsc_transferhpo/Results/datassimilar-datasets_hwaz_m.csv')
         k_nn = np.where(pd_df['dataset'] == dataset_name, pd_df['K_1'], 0)
         dataset_name_tranfer = k_nn[k_nn != 0][0]
 
@@ -236,12 +236,7 @@ if sys.argv[1] == 'transfer_learning':
         gridMatrix = create_gridm()
         dim = 6
         Xt_init = []
-
-        if dataset_name_tranfer == 'Adiac':
-            Yt_init = [0.7979539641943734, 0.7749360613810742, 0.8209718670076727, 0.8312020460358056,
-                       0.782608695652174]
-        else:
-            Yt_init = []
+        
         for confi in top5_configs:
 
             temp_l = np.array([confi['use_residual'], confi['use_bottleneck'], confi['nb_filters'],
@@ -254,12 +249,9 @@ if sys.argv[1] == 'transfer_learning':
                 if cc == 6:
                     index = i
 
-            if dataset_name_tranfer == 'Adiac':
-                pass
-            else:
-                tempo = objective(confi, dataset_name=dataset_name_tranfer, run='Transfer_learning_run_',
+            tempo = objective(confi, dataset_name=dataset_name_tranfer, run='Transfer_learning_run_',
                                   output_dir=write_dir_root + '/' + dataset_name + '/')
-                Yt_init.append(tempo)
+            Yt_init.append(tempo)
 
             Xt_init.append(gridMatrix[index, :].astype(int))
 
