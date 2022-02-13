@@ -193,7 +193,7 @@ if sys.argv[1] == 'transfer_learning':
         os.mkdir(write_dir_root)
     datasets_dict = read_all_datasets(root_dir + '/data', UNIVARIATE_ARCHIVE_NAMES[0])
     # loop through all datasets
-    for dataset_name in ['Computers', 'CinC_ECG_torso','DistalPhalanxTW', 'ECG200' , 'Earthquakes', 'DistalPhalanxOutlineAgeGroup', 'CBF', 'Car', 'BirdChicken']:
+    for dataset_name in ['DistalPhalanxTW', 'ECG200' , 'Earthquakes', 'DistalPhalanxOutlineAgeGroup', 'CBF', 'Car', 'BirdChicken']:
 
         # # load the model to transfer to other datasets
         # pre_model = tf.keras.models.load_model(output_dir + 'best_model.hdf5')
