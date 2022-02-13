@@ -238,6 +238,7 @@ if sys.argv[1] == 'transfer_learning':
         gridMatrix = create_gridm()
         dim = 6
         Xt_init = []
+        Yt_init = []
         
         for confi in top5_configs:
 
