@@ -210,13 +210,15 @@ if sys.argv[1] == 'transfer_learning':
         # callbacks = [reduce_lr, model_checkpoint]
         #
         # get the directory of the model for this current dataset_name#
-        output_dir = results_dir + '/SMBO/BestModel_' + dataset_name + '/'
-        if not os.path.exists(write_dir_root + '/' + dataset_name):
-            os.mkdir(write_dir_root + '/' + dataset_name)
+        out_dir = write_dir_root + '/' + dataset_name
+        if not os.path.exists(out_dir):
+            os.mkdir(out_dir)
 
         pd_df = pd.read_csv('/home/fr/fr_fr/fr_aa367/tsc_transferhpo/Results/datassimilar-datasets_hwaz_m.csv')
         k_nn = np.where(pd_df['dataset'] == dataset_name, pd_df['K_1'], 0)
         dataset_name_tranfer = k_nn[k_nn != 0][0]
+        
+        output_dir = results_dir + '/SMBO/BestModel_' + dataset_name_tranfer + '/'
 
         # for dataset_name_tranfer in UNIVARIATE_DATASET_NAMES:
         # iterations to run for Gaussian Process
@@ -249,7 +251,7 @@ if sys.argv[1] == 'transfer_learning':
                 if cc == 6:
                     index = i
 
-            tempo = objective(confi, dataset_name=dataset_name_tranfer, run='Transfer_learning_run_',
+            tempo = objective(confi, dataset_name=dataset_name, run='Transfer_learning_run_',
                                   output_dir=write_dir_root + '/' + dataset_name + '/')
             Yt_init.append(tempo)
 
@@ -276,7 +278,7 @@ if sys.argv[1] == 'transfer_learning':
 
             # objective
             confi = get_conf2(int(index), gridMatrix)
-            Y_temp = objective(confi, dataset_name=dataset_name_tranfer, run='Transfer_learning_run_',
+            Y_temp = objective(confi, dataset_name=dataset_name, run='Transfer_learning_run_',
                                output_dir=write_dir_root + '/' + dataset_name + '/')
             Y_next = np.array(Y_temp)
 
