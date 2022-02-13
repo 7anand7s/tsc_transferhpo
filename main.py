@@ -259,6 +259,7 @@ if sys.argv[1] == 'transfer_learning':
             Xt_init.append(gridMatrix[index, :].astype(int))
 
             gridMatrix = np.delete(gridMatrix, int(index), 0)
+            iter_ran += 1
 
         # Initialize samples
         Xt_sample = np.array(Xt_init).reshape(-1, dim)
