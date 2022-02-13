@@ -106,7 +106,7 @@ if sys.argv[1] == 'hpo_smbo':
                 continue
 
             # objective
-            conf = get_conf2(int(index))
+            conf = get_conf2(int(index), grid_matrix)
             Y_temp = objective(conf, name, run='SMBO_run_')
             Y_next = np.array(Y_temp)
 
