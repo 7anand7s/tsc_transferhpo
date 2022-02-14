@@ -13,7 +13,9 @@ from smbo import propose_location, expected_improvement
 from inception import objective
 from transfer_learning import train
 from utils.constants import UNIVARIATE_DATASET_NAMES, UNIVARIATE_ARCHIVE_NAMES
-from utils.utils import read_all_datasets
+from utils.utils import read_all_datasets, root_dir
+
+
 
 
 def get_conf2(ind, grid_matrixx):
@@ -58,7 +60,7 @@ def create_gridm():
     return gridm_matrix
 
 
-root_dir = '/home/fr/fr_fr/fr_aa367/tsc_transferhpo'
+
 results_dir = root_dir + '/Results'
 
 if sys.argv[1] == 'hpo_smbo':

@@ -21,6 +21,9 @@ matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = 'Arial'
 
 
+root_dir = '/home/fr/fr_fr/fr_aa367/tsc_transferhpo'
+
+
 def check_if_file_exits(file_name):
     return os.path.exists(file_name)
 

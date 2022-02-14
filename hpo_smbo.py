@@ -14,7 +14,7 @@ from smbo import propose_location, expected_improvement
 from inception import objective
 from transfer_learning import train
 from utils.constants import UNIVARIATE_DATASET_NAMES, UNIVARIATE_ARCHIVE_NAMES
-from utils.utils import read_all_datasets
+from utils.utils import root_dir
 
 parser = argparse.ArgumentParser()
 
@@ -60,8 +60,6 @@ def create_gridm():
                             counter += 1
     return gridm_matrix
 
-
-root_dir = '/home/fr/fr_fr/fr_aa367/tsc_transferhpo'
 results_dir = root_dir + '/Results'
 
 if __name__ == '__main__':

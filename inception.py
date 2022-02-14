@@ -9,7 +9,7 @@ from utils.utils import read_all_datasets, transform_labels
 from utils.constants import UNIVARIATE_ARCHIVE_NAMES as ARCHIVE_NAMES
 from utils.utils import save_logs
 from utils.utils import calculate_metrics
-from utils.utils import save_test_duration
+from utils.utils import save_test_duration, root_dir
 
 
 def prepare_data(datasets_dict, dataset_name):
@@ -82,9 +82,6 @@ def _inception_module(input_tensor, use_bottleneck, nb_filters, kernel_size, str
     x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Activation(activation='relu')(x)
     return x
-
-
-root_dir = '/home/fr/fr_fr/fr_aa367/tsc_transferhpo'
 
 
 def objective(config, dataset_name, run, output_dir=None):
