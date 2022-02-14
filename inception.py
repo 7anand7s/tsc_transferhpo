@@ -93,8 +93,6 @@ def objective(config, dataset_name, run, output_dir=None):
 
     datasets_dict = read_all_datasets(root_dir + '/data', archive_name)
 
-
-
     # for dataset_name in utils.constants.dataset_names_for_archive[archive_name]:
     print('\t\t\tdataset_name: ', dataset_name)
 
@@ -208,8 +206,12 @@ def objective(config, dataset_name, run, output_dir=None):
     else:
         config['use_residual'] = bool(config['use_residual'])
 
+    os.remove(output_directory + 'last_model.hdf5')
+    os.remove(output_directory + 'best_model.hdf5')
+    os.remove(output_directory + 'model_init.hdf5')
+
     if run:
-        with open(root_dir + '/Results/SMBO/' + '_run_%s%s.json' % (run, dataset_name), 'a+') as f:
+        with open(root_dir + '/Results/%s/%s/' % (run, dataset_name) + 'Running_%s.json' % dataset_name, 'a+') as f:
             json.dump({'dataset': dataset_name,
                        'depth': config['depth'],
                        'nb_filters': config['nb_filters'],

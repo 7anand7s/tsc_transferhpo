@@ -62,10 +62,11 @@ def create_gridm():
 
 results_dir = root_dir + '/Results'
 
+
 if __name__ == '__main__':
     parser.add_argument('--nargs', nargs='+')
 
-    n_iter = 50
+    n_iter = 200
     iterations_ran = 0
     m52 = ConstantKernel(1.0) * Matern(length_scale=1.0, nu=2.5)
     gpr = GaussianProcessRegressor(kernel=m52)
@@ -74,20 +75,25 @@ if __name__ == '__main__':
     for _, folders in parser.parse_args()._get_kwargs():
         for name in folders:
             print("Dataset: ", name)
+
+            folder_directory = results_dir + '/SMBO/' + name
+            if not os.path.exists(folder_directory):
+                os.makedirs(folder_directory)
+
             grid_matrix = create_gridm()
 
             dim = 6
             X_init = []
             Y_init = []
 
-            for x0 in np.random.randint(low=0, high=grid_matrix.shape[0], size=(5,)):
+            for x0 in np.random.randint(low=0, high=grid_matrix.shape[0], size=(10,)):
                 temp = grid_matrix[x0, :].astype(int)
 
                 conf = {'depth': int(temp[4]), 'nb_filters': int(temp[2]),
                         'batch_size': int(temp[3]), 'kernel_size': int(temp[5]),
                         'use_residual': bool(temp[0]), 'use_bottleneck': bool(temp[1])}
 
-                tempo = objective(conf, name, run='SMBO_run_')
+                tempo = objective(conf, name, run='SMBO',output_dir=folder_directory + '/' + 'config' + str(iterations_ran))
                 X_init.append(temp)
                 Y_init.append(tempo)
 
@@ -112,7 +118,7 @@ if __name__ == '__main__':
 
                 # objective
                 conf = get_conf2(int(index), grid_matrix)
-                Y_temp = objective(conf, name, run='SMBO')
+                Y_temp = objective(conf, name, run='SMBO', output_dir=folder_directory + '/' + 'config' + str(iterations_ran))
                 Y_next = np.array(Y_temp)
 
                 X_val = grid_matrix[int(index), :].astype(int)
