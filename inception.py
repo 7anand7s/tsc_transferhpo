@@ -211,9 +211,8 @@ def objective(config, dataset_name, run, output_dir=None):
     else:
         config['use_residual'] = bool(config['use_residual'])
 
-
     if run:
-        with open(root_dir + '/Results/' + '%s%s.json' % (run, dataset_name), 'a+') as f:
+        with open(root_dir + '/Results/SMBO/' + '_run_%s%s.json' % (run, dataset_name), 'a+') as f:
             json.dump({'dataset': dataset_name,
                        'depth': config['depth'],
                        'nb_filters': config['nb_filters'],
