@@ -86,7 +86,7 @@ if __name__ == '__main__':
             X_init = []
             Y_init = []
 
-            for x0 in np.random.randint(low=0, high=grid_matrix.shape[0], size=(10,)):
+            for x0 in np.random.randint(low=0, high=grid_matrix.shape[0]-1, size=(10,)):
                 temp = grid_matrix[x0, :].astype(int)
 
                 conf = {'depth': int(temp[4]), 'nb_filters': int(temp[2]),
