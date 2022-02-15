@@ -67,13 +67,14 @@ if __name__ == '__main__':
     parser.add_argument('--nargs', nargs='+')
 
     n_iter = 200
-    iterations_ran = 0
+
     m52 = ConstantKernel(1.0) * Matern(length_scale=1.0, nu=2.5)
     gpr = GaussianProcessRegressor(kernel=m52)
 
     folders = UNIVARIATE_DATASET_NAMES
     for _, folders in parser.parse_args()._get_kwargs():
         for name in folders:
+            iterations_ran = 0
             print("Dataset: ", name)
 
             folder_directory = results_dir + '/SMBO/' + name
