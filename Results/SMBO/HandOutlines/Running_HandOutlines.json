@@ -1,0 +1,2 @@
+{"dataset": "HandOutlines", "depth": 6, "nb_filters": 16, "batch_size": 64, "kernel_size": 64, "use_residual": "True", "use_bottleneck": "True", "acc": 0.892, "precision": 0.8808149405772496, "recall": 0.8884722631150522, "budget_ran": 1500, "duration": 2194.713278532028}
+{"dataset": "HandOutlines", "depth": 9, "nb_filters": 64, "batch_size": 64, "kernel_size": 64, "use_residual": "False", "use_bottleneck": "True", "acc": 0.885, "precision": 0.8975637413068975, "recall": 0.8537080656055699, "budget_ran": 1500, "duration": 9984.914233922958}
