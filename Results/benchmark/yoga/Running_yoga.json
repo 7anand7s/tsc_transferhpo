@@ -1,0 +1,1 @@
+{"dataset": "yoga", "depth": 9, "nb_filters": 16, "batch_size": 128, "kernel_size": 32, "use_residual": "True", "use_bottleneck": "False", "acc": 0.9013333333333333, "precision": 0.9033313018772371, "recall": 0.8988211570788425, "budget_ran": 1500, "duration": 263.09518337249756}

@@ -110,14 +110,17 @@ if __name__ == '__main__':
             iteration_number = 0
 
             print(name)
-
+            iteration_to_run=0
             if os.path.exists(run_folder + '/' + name + '/Running_' + name + '.json'):
                 df = pd.read_json(run_folder + '/' + name + '/Running_' + name + '.json', lines=True)
-                iteration_number = int(df.shape[0]) + 1
+                iteration_to_run = int(df.shape[0]) + 1
 
             print("Running iteration: ", iteration_number)
 
             # dataset_names:
             for conf in list(conf_list.values())[0]:
+                if iteration_number < iteration_to_run:
+                    iteration_number += 1
+                    continue
                 objective(conf, name, run='benchmark',output_dir=folder_directory + '/' + 'config' + str(iteration_number))
                 iteration_number += 1
