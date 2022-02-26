@@ -1,1 +1,0 @@
-{"dataset": "WordsSynonyms", "depth": 9, "nb_filters": 16, "batch_size": 128, "kernel_size": 32, "use_residual": "True", "use_bottleneck": "False", "acc": 0.670846394984326, "precision": 0.6152101517163108, "recall": 0.5268878182805534, "budget_ran": 1500, "duration": 212.41047048568726}

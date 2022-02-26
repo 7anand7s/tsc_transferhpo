@@ -1,1 +1,0 @@
-{"dataset": "Wine", "depth": 9, "nb_filters": 16, "batch_size": 128, "kernel_size": 32, "use_residual": "True", "use_bottleneck": "False", "acc": 0.6666666666666666, "precision": 0.6666666666666666, "recall": 0.6666666666666666, "budget_ran": 1500, "duration": 139.0228579044342}

@@ -1,1 +1,0 @@
-{"dataset": "WormsTwoClass", "depth": 9, "nb_filters": 16, "batch_size": 128, "kernel_size": 32, "use_residual": "True", "use_bottleneck": "False", "acc": 0.7569060773480663, "precision": 0.7682268883056285, "recall": 0.7305137844611529, "budget_ran": 1500, "duration": 367.3218958377838}
