@@ -8,6 +8,7 @@ import os
 import argparse
 import json
 
+from k_folds import objective_renewed
 from ConfigSpace import hyperparameters as CSH
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, Matern
@@ -66,13 +67,13 @@ results_dir = root_dir + '/Results'
 
 if __name__ == '__main__':
 
-    run_name = 'benchmark'
-    run_folder = results_dir + '/' + run_name
+    run_name = 'kfolds'
+    run_folder = results_dir + '/' + run_name + '/'
 
     if not os.path.exists(run_folder):
         os.makedirs(run_folder)
 
-    parser.add_argument('--nargs', nargs='+')
+    # parser.add_argument('--nargs', nargs='+')
 
     n_iter = 200
 
@@ -88,11 +89,9 @@ if __name__ == '__main__':
     cs.add_hyperparameters([depth, use_residual, nb_filters, use_bottleneck, batch_size, kernel_size])
 
     if not os.path.exists(run_folder + '/RS_sampled_configs.json'):
-        print("nothing")
         configurations = cs.sample_configuration(n_iter)
         with open(run_folder + '/RS_sampled_configs.json', 'a+') as f:
             conf_list = {'configs': [i.get_dictionary() for i in configurations]}
-            print(conf_list)
             json.dump(conf_list, f)
             f.write("\n")
     else:
@@ -100,27 +99,26 @@ if __name__ == '__main__':
             conf_list = json.load(jsonfile)
 
     folders = UNIVARIATE_DATASET_NAMES
-    for _, folders in parser.parse_args()._get_kwargs():
-        for name in folders:
+    # for _, folders in parser.parse_args()._get_kwargs():
+    # for folders in UNIVARIATE_DATASET_NAMES:
+        # print(folders)
+    for name in folders:
+            # iteration_number = 0
 
-            folder_directory = run_folder + '/' + name
-            if not os.path.exists(folder_directory):
-                os.makedirs(folder_directory)
+        print(name)
+        # iteration_to_run = 0
 
-            iteration_number = 0
+        # if os.path.exists(run_folder + 'Running_' + name + '.json'):
+        #     df = pd.read_json(run_folder + 'Running_' + name + '.json', lines=True)
+        #     iteration_to_run = int(df.shape[0]) + 1
 
-            print(name)
-            iteration_to_run=0
-            if os.path.exists(run_folder + '/' + name + '/Running_' + name + '.json'):
-                df = pd.read_json(run_folder + '/' + name + '/Running_' + name + '.json', lines=True)
-                iteration_to_run = int(df.shape[0]) + 1
-
-            print("Running iteration: ", iteration_number)
-
-            # dataset_names:
-            for conf in list(conf_list.values())[0]:
-                if iteration_number < iteration_to_run:
-                    iteration_number += 1
-                    continue
-                objective(conf, name, run='benchmark',output_dir=folder_directory + '/' + 'config' + str(iteration_number))
-                iteration_number += 1
+        # dataset_names:
+        for conf in list(conf_list.values())[0]:
+            # print("Running iteration: ", iteration_number)
+            # if iteration_number < iteration_to_run:
+            #     iteration_number += 1
+            #     continue
+            objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
+            objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
+            break
+            # iteration_number += 1
