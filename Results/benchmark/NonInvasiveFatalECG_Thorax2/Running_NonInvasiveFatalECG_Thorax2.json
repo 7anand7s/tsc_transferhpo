@@ -1,0 +1,1 @@
+{"dataset": "NonInvasiveFatalECG_Thorax2", "depth": 9, "nb_filters": 64, "batch_size": 16, "kernel_size": 32, "use_residual": "False", "use_bottleneck": "False", "acc": 0.9516539440203562, "precision": 0.9493211788535802, "recall": 0.9489020005975514, "budget_ran": 1500, "duration": 14485.79777097702}
