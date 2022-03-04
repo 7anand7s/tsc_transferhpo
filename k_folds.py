@@ -1,19 +1,14 @@
 import tensorflow as tf
 import numpy as np
-import sklearn
 import os
-import time
 import json
-import pandas as pd
 
-from utils.utils import read_all_datasets, transform_labels, DATASET_NAMES, readucr
 from utils.constants import UNIVARIATE_ARCHIVE_NAMES as ARCHIVE_NAMES
-from utils.utils import save_logs
 from utils.utils import calculate_metrics
-from utils.utils import save_test_duration, root_dir
-from sklearn.model_selection import StratifiedKFold
+from utils.utils import root_dir
 from sklearn.utils import shuffle
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
 
 def extract_data(dataset_name, split_n=5):
     file_name = root_dir + '/data/UCR_TS_Archive_2015/TSC/' + dataset_name + '/' + dataset_name
@@ -27,7 +22,7 @@ def extract_data(dataset_name, split_n=5):
     encoder.fit(Y_data)
     Y_data = encoder.transform(Y_data)
 
-    enc = sklearn.preprocessing.OneHotEncoder()
+    enc = OneHotEncoder()
     enc.fit(Y_data.reshape(-1, 1))
     y_ehc_data = enc.transform(Y_data.reshape(-1, 1)).toarray()
     split_xdata = np.array_split(X_data, split_n)
@@ -35,8 +30,6 @@ def extract_data(dataset_name, split_n=5):
     split_ydata = np.array_split(y_ehc_data, split_n)
 
     return nb_classes, X_data, Y_data, split_xdata, split_ydata, split_ytdata
-
-
 
 
 def _shortcut_layer(input_tensor, out_tensor):
@@ -222,6 +215,14 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
         test_acc.append(accu)
         test_pres.append(precs)
         test_recall.append(recall)
+
+    min_length_tr = min(map(len, train_curve))
+    for each in train_curve:
+        each = each[:min_length_tr]
+
+    min_length_tst = min(map(len, val_curve))
+    for each in val_curve:
+        each = each[:min_length_tst]
 
     train_cur = np.average(train_curve, axis=0)
     val_cur = np.average(val_curve, axis=0)
