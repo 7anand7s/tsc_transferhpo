@@ -171,7 +171,7 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
         model_checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='val_loss',
                                                               save_best_only=True)
 
-        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.1, mode='min')
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.05, mode='min')
 
         callbacks = [reduce_lr, model_checkpoint, early_stopping]
 

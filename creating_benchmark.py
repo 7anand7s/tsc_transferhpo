@@ -100,26 +100,26 @@ if __name__ == '__main__':
 
     # folders = UNIVARIATE_DATASET_NAMES
     for _, folders in parser.parse_args()._get_kwargs():
+        print(folders)
     # for folders in UNIVARIATE_DATASET_NAMES:
         # print(folders)
-    #for name in folders:
-    name = folders
-            # iteration_number = 0
+        for name in folders:
+                # iteration_number = 0
 
-        print(name)
-        # iteration_to_run = 0
+            print(name)
+            # iteration_to_run = 0
 
-        # if os.path.exists(run_folder + 'Running_' + name + '.json'):
-        #     df = pd.read_json(run_folder + 'Running_' + name + '.json', lines=True)
-        #     iteration_to_run = int(df.shape[0]) + 1
+            # if os.path.exists(run_folder + 'Running_' + name + '.json'):
+            #     df = pd.read_json(run_folder + 'Running_' + name + '.json', lines=True)
+            #     iteration_to_run = int(df.shape[0]) + 1
 
-        # dataset_names:
-        for conf in list(conf_list.values())[0]:
-            # print("Running iteration: ", iteration_number)
-            # if iteration_number < iteration_to_run:
-            #     iteration_number += 1
-            #     continue
-            objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
-            objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
-            break
-            # iteration_number += 1
+            # dataset_names:
+            for conf in list(conf_list.values())[0]:
+                # print("Running iteration: ", iteration_number)
+                # if iteration_number < iteration_to_run:
+                #     iteration_number += 1
+                #     continue
+                objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
+                objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
+                break
+                # iteration_number += 1
