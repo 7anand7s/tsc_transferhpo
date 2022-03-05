@@ -67,13 +67,13 @@ results_dir = root_dir + '/Results'
 
 if __name__ == '__main__':
 
-    run_name = 'kfolds'
+    run_name = 'kfolds_with_ES_20_0.1'
     run_folder = results_dir + '/' + run_name + '/'
 
     if not os.path.exists(run_folder):
         os.makedirs(run_folder)
 
-    # parser.add_argument('--nargs', nargs='+')
+    parser.add_argument('--nargs', nargs='+')
 
     n_iter = 200
 
@@ -98,11 +98,12 @@ if __name__ == '__main__':
         with open(run_folder + "/RS_sampled_configs.json", "r") as jsonfile:
             conf_list = json.load(jsonfile)
 
-    folders = UNIVARIATE_DATASET_NAMES
-    # for _, folders in parser.parse_args()._get_kwargs():
+    # folders = UNIVARIATE_DATASET_NAMES
+    for _, folders in parser.parse_args()._get_kwargs():
     # for folders in UNIVARIATE_DATASET_NAMES:
         # print(folders)
-    for name in folders:
+    #for name in folders:
+    name = folders
             # iteration_number = 0
 
         print(name)

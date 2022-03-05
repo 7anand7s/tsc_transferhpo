@@ -217,12 +217,12 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
         test_recall.append(recall)
 
     min_length_tr = min(map(len, train_curve))
-    for each in train_curve:
-        each = each[:min_length_tr]
+    for each in range(len(train_curve)):
+        train_curve[each] = train_curve[each][:min_length_tr]
 
     min_length_tst = min(map(len, val_curve))
-    for each in val_curve:
-        each = each[:min_length_tst]
+    for each in range(len(val_curve)):
+        val_curve[each] = val_curve[each][:min_length_tst]
 
     train_cur = np.average(train_curve, axis=0)
     val_cur = np.average(val_curve, axis=0)
