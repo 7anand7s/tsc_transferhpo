@@ -67,7 +67,7 @@ results_dir = root_dir + '/Results'
 
 if __name__ == '__main__':
 
-    run_name = 'kfolds_with_ES_20_0.1'
+    run_name = 'kfolds_with_ES_100_0.05'
     run_folder = results_dir + '/' + run_name + '/'
 
     if not os.path.exists(run_folder):

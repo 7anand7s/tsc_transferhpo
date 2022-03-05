@@ -165,19 +165,24 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
                       metrics=['accuracy'])
 
         reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.2, patience=10, min_lr=0.0001)
+        
+        save_dir = root_dir + '/Results/inception/TSC/' + dataset_name + '/'
+        
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
 
-        file_path = output_directory + 'best_model.hdf5'
+        file_path = save_dir + 'best_model.hdf5'
 
         model_checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='val_loss',
                                                               save_best_only=True)
 
-        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=20, min_delta=0.05, mode='min')
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=100, min_delta=0.05, mode='min')
 
         callbacks = [reduce_lr, model_checkpoint, early_stopping]
 
         model.summary()
 
-        model.save_weights(output_directory + 'model_init.hdf5')
+        model.save_weights(save_dir + 'model_init.hdf5')
 
         if batch_size is None:
             mini_batch_size = int(min(x_train.shape[0] / 10, 16))
@@ -190,7 +195,7 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
         val_curve.append(np.array(hist.history['val_loss']))
         train_curve.append(np.array(hist.history['loss']))
 
-        model.save(output_directory + 'last_model.hdf5')
+        model.save(save_dir + 'last_model.hdf5')
 
         best_model = tf.keras.models.load_model(file_path)
 
@@ -235,9 +240,9 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
     else:
         config['use_residual'] = bool(config['use_residual'])
 
-    os.remove(output_directory + 'last_model.hdf5')
-    os.remove(output_directory + 'best_model.hdf5')
-    os.remove(output_directory + 'model_init.hdf5')
+    #os.remove(output_directory + 'last_model.hdf5')
+    #os.remove(output_directory + 'best_model.hdf5')
+    #os.remove(output_directory + 'model_init.hdf5')
 
     if run:
         with open(root_dir + '/Results/%s/' % run + 'Running_%s.json' % dataset_name, 'a+') as f:
