@@ -13,9 +13,10 @@ import fsbo
 from fsbo import expected_improvement_fsbo
 
 results_dir = root_dir + '/Results/'
-dist_smfo = pd.read_csv(r"E:\thesis_work\tsc_transferhpo\tsc_transferhpoSMFO_distancing.csv")
-dist_fawaz = pd.read_csv(r"E:\thesis_work\tsc_transferhpo\datassimilar-datasets_hwaz_m.csv")
-dist_anand = pd.read_csv(r"E:\thesis_work\tsc_transferhpo\datassimilar-datasets_anand2_m3.csv")
+dist_smfo = pd.read_csv(root_dir + '/tsc_transferhpoSMFO_distancing.csv')
+dist_fawaz = pd.read_csv(root_dir + '/datassimilar-datasets_hwaz_m.csv')
+dist_anand = pd.read_csv(root_dir + '/datassimilar-datasets_anand2_m3.csv')
+
 folders = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF', 'Coffee',
            'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
            'DistalPhalanxOutlineAgeGroup', 'DistalPhalanxOutlineCorrect', 'DistalPhalanxTW',
@@ -252,7 +253,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
                                      dropout_rate=0.0,
                                      use_cnn=False)
 
-        model_path = r'E:/thesis_work/tsc_transferhpo/FSBO_backup' + str(cc) + '/'
+        model_path = root_dir + '/FSBO_backup' + str(cc) + '/'
         if not os.path.exists(model_path):
             os.mkdir(model_path)
 
@@ -260,7 +261,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
             "context_size": 10,
             "device": "cpu",
             "lr": 0.0001,
-            "model_path": model_path + 'model.pt' ,
+            "model_path": model_path + 'model.pt',
             "use_perf_hist": False,
             "loss_tol": 0.0001,
             "kernel": "rbf",
