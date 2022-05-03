@@ -1,186 +1,110 @@
+import pandas as pd
 import numpy as np
-import sklearn
-import time
-import json
-import tensorflow as tf
-from inception import _inception_module, _shortcut_layer
-from utils.utils import transform_labels, calculate_metrics, save_test_duration, save_logs
+import os
+import argparse
+
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import ConstantKernel, Matern
+from all_functions import results_dir, fsbo_running, folders, extracting_indices, dist_smfo, dist_anand, dist_fawaz, \
+    extract_grid, dissolving_grid, fitting_smbo
+
+parser = argparse.ArgumentParser()
 
 
-def prepare_data(datasets_dict, dataset_name):
-    x_train = datasets_dict[dataset_name][0]
-    y_train = datasets_dict[dataset_name][1]
-    x_test = datasets_dict[dataset_name][2]
-    y_test = datasets_dict[dataset_name][3]
+if __name__ == '__main__':
 
-    nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
-    # make the min to zero of labels
-    y_train, y_test = transform_labels(y_train, y_test)
-    # save orignal y because later we will use binary
-    y_true = y_test.astype(np.int64)
-    y_true_train = y_train.astype(np.int64)
-    # transform the labels from integers to one hot vectors
-    enc = sklearn.preprocessing.OneHotEncoder()
-    enc.fit(np.concatenate((y_train, y_test), axis=0).reshape(-1, 1))
-    y_train = enc.transform(y_train.reshape(-1, 1)).toarray()
-    y_test = enc.transform(y_test.reshape(-1, 1)).toarray()
+    parser.add_argument('BO_type', choices=['GP', 'FSBO'], default='GP')
+    parser.add_argument('ws_type', choices=['topn', 'tidal', 'diverse'], default='diverse')
+    parser.add_argument('dist_type', choices=['smfo', 'fawaz', 'anand'], default='anand')
+    parser.add_argument('-n_init', type=int, default=5)
+    parser.add_argument('-iters', type=int, default=50)
+    parser.add_argument('-cc', type=int, default=None)
+    parser.add_argument('-n_split', type=int, default=5)
+    parser.add_argument('-fsbo_train', type=int, default=10000)
+    parser.add_argument('-fsbo_tune', type=int, default=5000)
 
-    if len(x_train.shape) == 2:  # if univariate
-        # add a dimension to make it multivariate with one dimension
-        x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
-        x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
+    args = parser.parse_args()
+    n_warm_start = args.n_init
+    n_iter = args.iters
+    cc = args.cc
+    BO_type = args.BO_type
+    ws_type = args.ws_type
+    dist_type = args.dist_type
+    n_split = args.n_split
+    fsbo_train = args.fsbo_train
+    fsbo_tune = args.fsbo_tune
 
-    return x_train, y_train, x_test, y_test, y_true, nb_classes, y_true_train, enc
-
-
-def train(pre_model=None, config=None, datasets_dict=None, dataset_name=None,
-          dataset_name_tranfer=None, write_output_dir=None):
-
-    # read train, val and test sets
-    x_train = datasets_dict[dataset_name_tranfer][0]
-    y_train = datasets_dict[dataset_name_tranfer][1]
-
-    y_true_val = None
-    y_pred_val = None
-
-    x_test = datasets_dict[dataset_name_tranfer][-2]
-    y_test = datasets_dict[dataset_name_tranfer][-1]
-
-    batch_size = config['batch_size'] if config['batch_size'] else 64
-    if batch_size is None:
-        mini_batch_size = int(min(x_train.shape[0] / 10, 16))
+    # choose the distance method ****************************************
+    if dist_type == 'fawaz':
+        dist_df = dist_fawaz
+    elif dist_type == 'anand':
+        dist_df = dist_anand
+    elif dist_type == 'smfo':
+        dist_df = dist_smfo
     else:
-        mini_batch_size = batch_size
+        raise ValueError('Specify the distance type')
 
-    nb_classes = len(np.unique(np.concatenate((y_train, y_test), axis=0)))
-
-    # make the min to zero of labels
-    y_train, y_test = transform_labels(y_train, y_test)
-
-    # save orignal y because later we will use binary
-    y_true = y_test.astype(np.int64)
-
-    # transform the labels from integers to one hot vectors
-    y_train = tf.keras.utils.to_categorical(y_train, nb_classes)
-    y_test = tf.keras.utils.to_categorical(y_test, nb_classes)
-
-    if len(x_train.shape) == 2:  # if univariate
-        # add a dimension to make it multivariate with one dimension
-        x_train = x_train.reshape((x_train.shape[0], x_train.shape[1], 1))
-        x_test = x_test.reshape((x_test.shape[0], x_test.shape[1], 1))
-
-    # for the new tranfered re-trained model
-    file_path = write_output_dir + 'best_model.hdf5'
-    # callbacks : reduce learning rate
-    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=50, min_lr=0.0001)
-    # model checkpoint
-    model_checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='loss',
-                                                          save_best_only=True)
-    callbacks = [reduce_lr, model_checkpoint]
-
-    start_time = time.time()
-    # remove last layer to replace with a new one
-    # input_shape = (None, x_train.shape[2])
-    input_shape = x_train.shape[1:]
-    model = build_model(input_shape, nb_classes, pre_model, config)
-
-    model.summary()
-
-    # b = model.layers[1].get_weights()
-
-    hist = model.fit(x_train, y_train, batch_size=mini_batch_size, epochs=15,
-                     verbose=True, validation_data=(x_test, y_test), callbacks=callbacks)
-
-    # a = model.layers[1].get_weights()
-
-    # compare_weights(a,b)
-
-    best_model = tf.keras.models.load_model(file_path)
-
-    y_pred2 = best_model.predict(x_test, batch_size=batch_size)
-
-    return_df_metrics = False
-
-    if return_df_metrics:
-        y_pred2 = np.argmax(y_pred2, axis=1)
-        df_metrics2 = calculate_metrics(y_true, y_pred2, 0.0)
-        return_v2 = df_metrics2
+    # choose how initial configs are chosen -----------------------------
+    if ws_type == 'topn':
+        method = 'm1'
+    elif ws_type == 'tidal':
+        method = 'm2'
+    elif ws_type == 'diverse':
+        method = 'm3'
     else:
-        test_duration2 = time.time() - start_time
-        save_test_duration(write_output_dir + 'test_duration2.csv', test_duration2)
-        return_v2 = y_pred2
+        raise ValueError('Specify how initial configs are chosen')
 
-    # save predictions
-    np.save(write_output_dir + 'y_pred2.npy', return_v2)
+    # create sorted benchmarks before running any TF algorithm
+    if not os.path.exists(results_dir + 'trial_benchmark_sorted/'):
+        dissolving_grid(folders)
 
-    # convert the predicted from binary to integer
-    y_pred2 = np.argmax(return_v2, axis=1)
+    # ################################ BO-GP run #################################################
+    if BO_type == 'GP':
 
-    df_metrics2 = save_logs(write_output_dir, hist, y_pred2, y_true, test_duration2,
-                            plot_test_acc=False)
+        # Setting configuration for GP kernel
+        m52 = ConstantKernel(1.0) * Matern(length_scale=1.0, nu=2.5)
+        gpr = GaussianProcessRegressor(kernel=m52)
 
-    tf.keras.backend.clear_session()
+        # create directory to save results from the run
+        gp_dir = results_dir + 'BO_GP_' + ws_type + '_init_' + dist_type + '/'
+        if not os.path.exists(gp_dir):
+            os.mkdir(gp_dir)
 
-    with open(write_output_dir + 'Transfer_learning_run.json', 'a+') as f:
-        json.dump({'dataset': dataset_name,
-                   'depth': config['depth'],
-                   'nb_filters': config['nb_filters'],
-                   'batch_size': config['batch_size'],
-                   'kernel_size': config['kernel_size'],
-                   'use_residual': 'True' if config['use_residual'] else 'False',
-                   'use_bottleneck': 'True' if config['use_bottleneck'] else 'False',
-                   'acc': df_metrics2['accuracy'][0],
-                   'precision': df_metrics2['precision'][0],
-                   'recall': df_metrics2['recall'][0],
-                   'budget_ran': 1500,
-                   'duration': test_duration2,
-                   }, f)
-        f.write("\n")
+        # folder which contains the benchmarks
+        run_folder = results_dir + '/kfolds_RS_benchmarks/'
 
-    accu = df_metrics2['accuracy'][0]
+        for loop1, ind_c in zip(folders, range(len(dist_df))):
+            # iterations_ran = 0
+            source_d = dist_df['K_1'][ind_c]
 
-    if 0.75 <= accu < 0.9:
-        return 0.95 - accu
+            dim = 6
+            read_dir = results_dir + 'kfolds_RS_benchmarks' + '/Running_' + loop1 + '.json'
+            grid_m2, acc_m2 = extract_grid(read_dir)
 
-    if 0.9 <= accu <= 1.0:
-        return (1 - accu) / 2
+            if not os.path.exists(results_dir + 'trial_benchmark_sorted' + '/RS_' + source_d + '.json'):
+                raise ValueError('Create sorted benchmarks and run again')
 
-    return accu
+            df3 = pd.read_json(results_dir + 'trial_benchmark_sorted' + '/RS_' + source_d + '.json', lines=True)
 
+            savin_dir = gp_dir + loop1 + '.json'
+            X_init, Y_init, grid_m2, acc_m2, iterations_ran \
+                = extracting_indices(n_warm_start, df3, grid_m2, acc_m2, savin_dir, method=method)
 
-def build_model(input_shape, nb_classes, pre_model=None, config=None):
-    depth = config['depth'] if config['depth'] else 6
-    use_residual = config['use_residual'] if config['use_residual'] else True
-    nb_filters = config['nb_filters'] if config['nb_filters'] else 32
-    use_bottleneck = config['use_bottleneck'] if config['use_bottleneck'] else True
-    kernel_size = config['kernel_size'] if config['kernel_size'] else 41
+            # Initialize samples
+            X_sample = np.array(X_init).reshape(-1, dim)
+            Y_sample = np.array(Y_init).reshape(-1, 1)
 
-    input_layer = tf.keras.layers.Input(input_shape)
+            fitting_smbo(gpr, savin_dir, iterations_ran, n_iter, grid_m2, acc_m2, X_sample, Y_sample)
 
-    x = input_layer
-    input_res = input_layer
+    # ################################ BO-FSBO run #################################################
 
-    for d in range(depth):
+    if BO_type == 'FSBO':
 
-        x = _inception_module(x, use_bottleneck, nb_filters, kernel_size)
+        # create directory to save results from the run
+        fsbo_dir = results_dir + 'BO_FSBO_' + ws_type + '_init_' + dist_type + '/'
+        if not os.path.exists(fsbo_dir):
+            os.mkdir(fsbo_dir)
 
-        if use_residual and d % 3 == 2:
-            x = _shortcut_layer(input_res, x)
-            input_res = x
-
-    gap_layer = tf.keras.layers.GlobalAveragePooling1D()(x)
-
-    output_layer = tf.keras.layers.Dense(nb_classes, activation='softmax')(gap_layer)
-
-    model = tf.keras.models.Model(inputs=input_layer, outputs=output_layer)
-
-    if pre_model is not None:
-
-        for i in range(len(model.layers) - 1):
-            model.layers[i].set_weights(pre_model.layers[i].get_weights())
-
-    model.compile(loss='categorical_crossentropy', optimizer=tf.keras.optimizers.Adam(),
-                  metrics=['accuracy'])
-
-    return model
-
+        # run FSBO with the required configs
+        fsbo_running(n_warm_start, n_iter, folders, fsbo_dir, fsbo_train, fsbo_tune,
+                     transfer=True, tf_method=method, dist_data=dist_df, cc=4)
