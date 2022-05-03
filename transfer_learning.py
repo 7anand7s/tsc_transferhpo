@@ -107,4 +107,4 @@ if __name__ == '__main__':
 
         # run FSBO with the required configs
         fsbo_running(n_warm_start, n_iter, folders, fsbo_dir, fsbo_train, fsbo_tune,
-                     transfer=True, tf_method=method, dist_data=dist_df, cc=4)
+                     transfer=True, tf_method=method, dist_data=dist_df, cc=cc)
