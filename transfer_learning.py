@@ -6,7 +6,7 @@ import argparse
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, Matern
 from all_functions import results_dir, fsbo_running, folders, extracting_indices, dist_smfo, dist_anand, dist_fawaz, \
-    extract_grid, dissolving_grid, fitting_smbo
+    extract_grid, dissolving_grid, fitting_smbo, dist_anand_agg2, dist_anand_agg3, dist_anand_agg4, dist_anand_agg5
 
 parser = argparse.ArgumentParser()
 
@@ -15,7 +15,8 @@ if __name__ == '__main__':
 
     parser.add_argument('BO_type', choices=['GP', 'FSBO'], default='GP')
     parser.add_argument('ws_type', choices=['topn', 'tidal', 'diverse'], default='diverse')
-    parser.add_argument('dist_type', choices=['smfo', 'fawaz', 'anand'], default='anand')
+    parser.add_argument('dist_type', choices=['smfo', 'fawaz', 'anand', 'anand_agg2', 'anand_agg3', 'anand_agg4',
+                                              'anand_agg5'], default='anand')
     parser.add_argument('-n_init', type=int, default=5)
     parser.add_argument('-iters', type=int, default=50)
     parser.add_argument('-cc', type=int, default=None)
@@ -39,6 +40,14 @@ if __name__ == '__main__':
         dist_df = dist_fawaz
     elif dist_type == 'anand':
         dist_df = dist_anand
+    elif dist_type == 'anand_agg2':
+        dist_df = dist_anand_agg2
+    elif dist_type == 'anand_agg3':
+        dist_df = dist_anand_agg3
+    elif dist_type == 'anand_agg4':
+        dist_df = dist_anand_agg4
+    elif dist_type == 'anand_agg5':
+        dist_df = dist_anand_agg5
     elif dist_type == 'smfo':
         dist_df = dist_smfo
     else:
@@ -51,6 +60,8 @@ if __name__ == '__main__':
         method = 'm2'
     elif ws_type == 'diverse':
         method = 'm3'
+    elif ws_type == 'greedy':
+        method = 'greedy'
     else:
         raise ValueError('Specify how initial configs are chosen')
 
@@ -80,6 +91,7 @@ if __name__ == '__main__':
             dim = 6
             read_dir = results_dir + 'kfolds_RS_benchmarks' + '/Running_' + loop1 + '.json'
             grid_m2, acc_m2 = extract_grid(read_dir)
+            print(loop1, source_d)
 
             if not os.path.exists(results_dir + 'trial_benchmark_sorted' + '/RS_' + source_d + '.json'):
                 raise ValueError('Create sorted benchmarks and run again')

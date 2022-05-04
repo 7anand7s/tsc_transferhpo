@@ -16,6 +16,10 @@ results_dir = root_dir + '/Results/'
 dist_smfo = pd.read_csv(root_dir + '/tsc_transferhpoSMFO_distancing.csv')
 dist_fawaz = pd.read_csv(root_dir + '/datassimilar-datasets_hwaz_m.csv')
 dist_anand = pd.read_csv(root_dir + '/datassimilar-datasets_anand2_m3.csv')
+dist_anand_agg2 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr2.csv')
+dist_anand_agg3 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr3.csv')
+dist_anand_agg4 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand_m3_aagr4.csv')
+dist_anand_agg5 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr5.csv')
 
 folders = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF', 'Coffee',
            'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
@@ -142,6 +146,7 @@ def extracting_indices(run_length, df2, grid_m, acc_m, save_dir, iterations_ran=
             # # use_bottleneck nb_filters Batch_size use_residual depth kernel_size --- fsbo
             # ['use_residual', 'use_bottleneck', 'nb_filters', 'batch_size', 'depth', 'kernel_size'] --grid
             ee = int(index[0])
+            print(ee)
         try:
             X = grid_m[ee]
             Y = float(acc_m[ee])
@@ -198,7 +203,6 @@ def fitting_smbo(gpr, w_dir, total_iters_ran, n_iters, grid_matrix, acc_matrixx,
 
 def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, fsbo_tune_epochs, transfer=False,
                  n_split=5, tf_method='m1', dist_data=None, cc=None):
-
     # copying files to avoid emory conflicts for parallel FSBO runs
     # copying the sorted folder
     to_copy_files1 = os.listdir(results_dir + 'trial_benchmark_sorted/')
@@ -236,7 +240,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
         test_data = {}
         for tr_data in train_folders:
             train_data[tr_data] = {}
-            train_data[tr_data]["X"], train_data[tr_data]["y_val"] = retrieve_matrices\
+            train_data[tr_data]["X"], train_data[tr_data]["y_val"] = retrieve_matrices \
                 (parent_dir, tr_data)
 
         for v_data in val_folders.flatten():
@@ -294,6 +298,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
 
                 ind1 = total_data.index(each_data)
                 k1 = dist_data['K_1'][ind1]
+                print(each_data, k1)
 
                 readd_dir = target_dir1 + '/RS_' + k1 + '.json'
                 df_fsbo = pd.read_json(readd_dir, lines=True)
@@ -310,6 +315,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
                                      )[0].tolist()
                     try:
                         ee = index[0]
+                        print(ee)
                         ind_ref = np.where(np.all(X_MATRIX_ref == X_MATRIX[ee], axis=1))[0].tolist()
                         with open(work_dir + 'FSBO_' + each_data + '.json', 'a+') as f:
                             json.dump({'config': X_MATRIX_ref[ind_ref[0]].tolist(),
@@ -376,6 +382,6 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
                 iter_ran += 1
                 status_bar.update()
 
-        shutil.rmtree(model_path)
-        shutil.rmtree(target_dir1)
-        shutil.rmtree(target_dir2)
+    shutil.rmtree(model_path)
+    shutil.rmtree(target_dir1)
+    shutil.rmtree(target_dir2)
