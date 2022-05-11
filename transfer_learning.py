@@ -5,17 +5,20 @@ import argparse
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, Matern
-from all_functions import results_dir, fsbo_running, folders, extracting_indices, dist_smfo, dist_anand, dist_fawaz, \
-    extract_grid, dissolving_grid, fitting_smbo, dist_anand_agg2, dist_anand_agg3, dist_anand_agg4, dist_anand_agg5
+from all_functions import results_dir, fsbo_running, folders, extracting_indices, \
+    dist_anand_agg4, extract_grid, dissolving_grid, fitting_smbo, \
+    w_dist, root_dir, dist_fawaz
+
+# # dist_smfo, dist_anand, edist_anand_agg5,  dist_anand_agg2, dist_anand_agg3, \
+
 
 parser = argparse.ArgumentParser()
-
 
 if __name__ == '__main__':
 
     parser.add_argument('BO_type', choices=['GP', 'FSBO'], default='GP')
     parser.add_argument('ws_type', choices=['topn', 'tidal', 'diverse'], default='diverse')
-    parser.add_argument('dist_type', choices=['smfo', 'fawaz', 'anand', 'anand_agg2', 'anand_agg3', 'anand_agg4',
+    parser.add_argument('dist_type', choices=['smfo', 'IDSM', 'w_dist', 'anand_agg2', 'anand_agg3', 'anand_agg4',
                                               'anand_agg5'], default='anand')
     parser.add_argument('-n_init', type=int, default=5)
     parser.add_argument('-iters', type=int, default=50)
@@ -23,11 +26,15 @@ if __name__ == '__main__':
     parser.add_argument('-n_split', type=int, default=5)
     parser.add_argument('-fsbo_train', type=int, default=10000)
     parser.add_argument('-fsbo_tune', type=int, default=5000)
+    parser.add_argument('-freeze', type=int, default=0)
+    parser.add_argument('-lr', type=float, default=0.0001)
 
     args = parser.parse_args()
+    freeze = bool(args.freeze)
     n_warm_start = args.n_init
     n_iter = args.iters
     cc = args.cc
+    lr = args.lr
     BO_type = args.BO_type
     ws_type = args.ws_type
     dist_type = args.dist_type
@@ -36,20 +43,20 @@ if __name__ == '__main__':
     fsbo_tune = args.fsbo_tune
 
     # choose the distance method ****************************************
-    if dist_type == 'fawaz':
+    if dist_type == 'IDSM':
         dist_df = dist_fawaz
-    elif dist_type == 'anand':
-        dist_df = dist_anand
-    elif dist_type == 'anand_agg2':
-        dist_df = dist_anand_agg2
-    elif dist_type == 'anand_agg3':
-        dist_df = dist_anand_agg3
+    # elif dist_type == 'anand_agg2':
+    #     dist_df = dist_anand_agg2
+    # elif dist_type == 'anand_agg3':
+    #     dist_df = dist_anand_agg3
     elif dist_type == 'anand_agg4':
         dist_df = dist_anand_agg4
-    elif dist_type == 'anand_agg5':
-        dist_df = dist_anand_agg5
-    elif dist_type == 'smfo':
-        dist_df = dist_smfo
+    # elif dist_type == 'anand_agg5':
+    #     dist_df = dist_anand_agg5
+    # elif dist_type == 'smfo':
+    #     dist_df = dist_smfo
+    elif dist_type == 'w_dist':
+        dist_df = w_dist
     else:
         raise ValueError('Specify the distance type')
 
@@ -82,14 +89,14 @@ if __name__ == '__main__':
             os.mkdir(gp_dir)
 
         # folder which contains the benchmarks
-        run_folder = results_dir + '/kfolds_RS_benchmarks/'
+        # run_folder = results_dir + '/kfolds_RS_benchmarks/'
 
         for loop1, ind_c in zip(folders, range(len(dist_df))):
             # iterations_ran = 0
             source_d = dist_df['K_1'][ind_c]
 
             dim = 6
-            read_dir = results_dir + 'kfolds_RS_benchmarks' + '/Running_' + loop1 + '.json'
+            read_dir = root_dir + '/Final_benchmarks' + '/Running_' + loop1 + '.json'
             grid_m2, acc_m2 = extract_grid(read_dir)
             print(loop1, source_d)
 
@@ -113,10 +120,10 @@ if __name__ == '__main__':
     if BO_type == 'FSBO':
 
         # create directory to save results from the run
-        fsbo_dir = results_dir + 'BO_FSBO_' + ws_type + '_init_' + dist_type + '/'
+        fsbo_dir = results_dir + 'FSBO_' + ws_type + '_init_' + dist_type + '_' + str(cc) + '/'
         if not os.path.exists(fsbo_dir):
             os.mkdir(fsbo_dir)
 
         # run FSBO with the required configs
         fsbo_running(n_warm_start, n_iter, folders, fsbo_dir, fsbo_train, fsbo_tune,
-                     transfer=True, tf_method=method, dist_data=dist_df, cc=cc)
+                     transfer=True, tf_method=method, dist_data=dist_df, cc=cc, frozen=freeze, lr_rate=lr)

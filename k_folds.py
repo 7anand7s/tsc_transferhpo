@@ -1,3 +1,5 @@
+import time
+
 import tensorflow as tf
 import numpy as np
 import os
@@ -8,6 +10,18 @@ from utils.utils import calculate_metrics
 from utils.utils import root_dir
 from sklearn.utils import shuffle
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
+
+class CustomStopper(tf.keras.callbacks.EarlyStopping):
+    def __init__(self, monitor='val_loss', min_delta=0.0, patience=0,
+                 verbose=0, mode='auto', start_epoch=100):  # add argument for starting epoch
+        super(CustomStopper, self).__init__(monitor=monitor, patience=patience, min_delta=min_delta,
+                                            mode=mode, verbose=verbose)
+        self.start_epoch = start_epoch
+
+    def on_epoch_end(self, epoch, logs=None):
+        if epoch > self.start_epoch:
+            super().on_epoch_end(epoch, logs)
 
 
 def extract_data(dataset_name, split_n=5):
@@ -77,6 +91,7 @@ def _inception_module(input_tensor, use_bottleneck, nb_filters, kernel_size, str
 
 
 def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
+    d = time.time()
     budget = 1500
     classifier_name = 'inception'
     archive_name = ARCHIVE_NAMES[0]
@@ -121,7 +136,7 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
 
         if output_dir is None:
             tmp_output_directory = root_dir + '/Results/' + classifier_name + '/' + archive_name + '/'
-            output_dir = tmp_output_directory + dataset_name + '/'
+            output_dir = tmp_output_directory + dataset_name
 
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
@@ -165,18 +180,18 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
                       metrics=['accuracy'])
 
         reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.2, patience=10, min_lr=0.0001)
-        
-        save_dir = root_dir + '/Results/inception/TSC/' + dataset_name + '/'
-        
+
+        save_dir = root_dir + '/Results/inception/TSC/' + dataset_name
+
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
-        file_path = save_dir + 'best_model.hdf5'
+        file_path = save_dir + '/best_model.hdf5'
 
         model_checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath=file_path, monitor='val_loss',
                                                               save_best_only=True)
 
-        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=100, min_delta=0.05, mode='min')
+        early_stopping = CustomStopper(monitor='val_loss', start_epoch=500, patience=20, min_delta=0.001, mode='min')
 
         callbacks = [reduce_lr, model_checkpoint, early_stopping]
 
@@ -231,6 +246,7 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
 
     train_cur = np.average(train_curve, axis=0)
     val_cur = np.average(val_curve, axis=0)
+
     acc = sum(test_acc) / len(test_acc)
     precision = sum(test_pres) / len(test_pres)
     recal = sum(test_recall) / len(test_recall)
@@ -240,10 +256,10 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
     else:
         config['use_residual'] = bool(config['use_residual'])
 
-    #os.remove(output_directory + 'last_model.hdf5')
-    #os.remove(output_directory + 'best_model.hdf5')
-    #os.remove(output_directory + 'model_init.hdf5')
-
+    # os.remove(output_directory + 'last_model.hdf5')
+    # os.remove(output_directory + 'best_model.hdf5')
+    # os.remove(output_directory + 'model_init.hdf5')
+    ran_for = time.time() - d
     if run:
         with open(root_dir + '/Results/%s/' % run + 'Running_%s.json' % dataset_name, 'a+') as f:
             json.dump({'dataset': dataset_name,
@@ -256,9 +272,34 @@ def objective_renewed(config, dataset_name, run, n_splits=5, output_dir=None):
                        'acc': acc,
                        'precision': precision,
                        'recall': recal,
-                       'budget_ran': budget,
+                       'budget_ran': len(val_cur),
                        'train_curve': train_cur.tolist(),
-                       'val_curve': val_cur.tolist()
+                       'val_curve': val_cur.tolist(),
+                       'train_curve 1': train_curve[0].tolist(),
+                       'val_curve 1': val_curve[0].tolist(),
+                       'acc 1': test_acc[0],
+                       'precision 1': test_pres[0],
+                       'recall 1': test_recall[0],
+                       'train_curve 2': train_curve[1].tolist(),
+                       'val_curve 2': val_curve[1].tolist(),
+                       'acc 2': test_acc[1],
+                       'precision 2': test_pres[1],
+                       'recall 2': test_recall[1],
+                       'train_curve 3': train_curve[2].tolist(),
+                       'val_curve 3': val_curve[2].tolist(),
+                       'acc 3': test_acc[2],
+                       'precision 3': test_pres[2],
+                       'recall 3': test_recall[2],
+                       'train_curve 4': train_curve[3].tolist(),
+                       'val_curve 4': val_curve[3].tolist(),
+                       'acc 4': test_acc[3],
+                       'precision 4': test_pres[3],
+                       'recall 4': test_recall[3],
+                       'train_curve 5': train_curve[4].tolist(),
+                       'val_curve 5': val_curve[4].tolist(),
+                       'acc 5': test_acc[4],
+                       'precision 5': test_pres[4],
+                       'recall 5': test_recall[4],
                        }, f)
             f.write("\n")
 

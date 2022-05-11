@@ -7,7 +7,7 @@ import random
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, Matern
-from all_functions import fsbo_running, extract_grid, results_dir, folders, fitting_smbo
+from all_functions import fsbo_running, extract_grid, results_dir, folders, fitting_smbo, root_dir
 
 parser = argparse.ArgumentParser()
 
@@ -43,12 +43,16 @@ if __name__ == '__main__':
     parser.add_argument('-n_init', type=int, default=5)
     parser.add_argument('-iters', type=int, default=50)
     parser.add_argument('-n_split', type=int, default=5)
+    parser.add_argument('-cc', type=int, default=None)
     parser.add_argument('-fsbo_train', type=int, default=10000)
     parser.add_argument('-fsbo_tune', type=int, default=5000)
+    parser.add_argument('-freeze', type=int, default=0)
 
     args = parser.parse_args()
     n_warm_start = args.n_init
+    freeze = bool(args.freeze)
     n_iter = args.iters
+    cc = args.cc
     n_split = args.n_split
     fsbo_train = args.fsbo_train
     fsbo_tune = args.fsbo_tune
@@ -58,12 +62,12 @@ if __name__ == '__main__':
     # raise ValueError('podhum')
 
     # folder which contains the benchmarks
-    run_folder = results_dir + '/kfolds_RS_benchmarks/'
+    # run_folder = results_dir + '/kfolds_RS_benchmarks/'
 
     # ################################ BO-GP run #################################################
 
     # create directory to save results from the run
-    gp_dir = results_dir + 'BO_GP_rand_init/'
+    gp_dir = results_dir + 'BO_GP_rand_init_' + str(cc) + '/'
     if not os.path.exists(gp_dir):
         os.mkdir(gp_dir)
 
@@ -73,7 +77,7 @@ if __name__ == '__main__':
 
     for name in folders:
 
-        read_dir = run_folder + '/Running_' + name + '.json'
+        read_dir = root_dir + '/Final_benchmarks' + '/Running_' + name + '.json'
         grid_m, acc_m = extract_grid(read_dir)
         dim = 6
         X_init = []
@@ -96,8 +100,9 @@ if __name__ == '__main__':
     # ################################ BO-FSBO run #################################################
 
     # create directory to save results from the run
-    fsbo_dir = results_dir + 'BO_FSBO_rand_init/'
+    fsbo_dir = results_dir + 'BO_FSBO_rand_init_' + str(cc) + '/'
     if not os.path.exists(fsbo_dir):
         os.mkdir(fsbo_dir)
 
-    fsbo_running(rand_init, n_iter, folders, fsbo_dir, fsbo_train, fsbo_tune, transfer=False, cc=4)
+    fsbo_running(rand_init, n_iter, folders, fsbo_dir, fsbo_train, fsbo_tune, transfer=False, frozen=freeze, cc=cc)
+

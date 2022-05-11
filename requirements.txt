@@ -1,8 +1,12 @@
 tensorflow==2.8.0
-numpy==1.22.2
+numpy~=1.21.5
 scipy==1.8.0
 sklearn==0.0
 scikit-learn==1.0.2
 pandas==1.4.0
 matplotlib==3.5.1
 configspace==0.4.21
+torch~=1.10.1+cu113
+gpytorch~=1.6.0
+
+tqdm~=4.63.1

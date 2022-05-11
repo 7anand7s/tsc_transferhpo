@@ -11,9 +11,11 @@ from torch import nn
 import torch
 import random
 import gpytorch
+import tqdm
 import copy
 import numpy as np
 import torch.nn.functional as F
+from scipy.stats import norm
 
 torch.manual_seed(0)
 torch.use_deterministic_algorithms(True)
@@ -213,6 +215,7 @@ class FSBO(nn.Module):
         val_losses = []
         train_losses = []
 
+        pbar = tqdm.tqdm(total=epochs)
 
         for epoch in range(epochs):
             # c2 = 0
@@ -235,8 +238,8 @@ class FSBO(nn.Module):
                     print(e)
                 # finally:
                 #     c2 += 1
-            train_losses.append(temp_train_loss/n_batches)
-            print("Train :", epoch, train_losses[-1])
+            train_losses.append(temp_train_loss / n_batches)
+            # print("Train :", epoch, train_losses[-1])
             temp_val_loss = 0
 
             count = 0
@@ -250,14 +253,16 @@ class FSBO(nn.Module):
 
             if count > 0:
                 val_losses.append(temp_val_loss / count)
-                print("Valid :", epoch, val_losses[-1])
+                # print("Valid :", epoch, val_losses[-1])
                 if best_loss > val_losses[-1]:
                     best_loss = val_losses[-1]
                     self.save_checkpoint(self.model_path)
 
+            pbar.update()
+
         matplotlib.pyplot.plot(np.arange(len(train_losses)), train_losses, 'r')
         matplotlib.pyplot.plot(np.arange(len(val_losses)), val_losses, 'g')
-        matplotlib.pyplot.show()
+        matplotlib.pyplot.savefig('check_me_every_cycle.png')
 
     def test(self, val_batch):
 
@@ -299,16 +304,23 @@ class FSBO(nn.Module):
         self.likelihood.load_state_dict(ckpt['likelihood'])
         self.feature_extractor.load_state_dict(ckpt['net'])
 
-    def finetuning(self, x, y, w, epochs=10, patience=10, finetuning_lr=0.01, tol=0.0001):
+    def finetuning(self, x, y, w, epochs=10, patience=10, finetuning_lr=0.01, tol=0.0001, freeze=False):
 
         best_loss = np.inf
         patience_counter = 0
         self.load_checkpoint(self.model_path)
         weights = copy.deepcopy(self.state_dict())
 
+        # Freezing the parameters
+        # print('inside fsbo', freeze)
+        if freeze:
+            for param in self.model.parameters():
+                param.requires_grad = False
+
         self.model.train()
         self.feature_extractor.train()
         self.likelihood.train()
+
 
         optimizer = torch.optim.Adam(self.parameters(), lr=finetuning_lr)
         losses = [np.inf]
@@ -378,117 +390,167 @@ def retreive_table(dataset_name):
     acc = df['acc'].to_numpy()
     df = df.drop(columns=['dataset', 'acc', 'precision', 'recall', 'budget_ran', 'duration'])
     hps = df.to_numpy()
-
+    print(hps.dtype, acc.dtype)
     return hps, acc
 
 
-if __name__ == '__main__':
+def propose_location(acquisition, X_sample, Y_sample, fsbo, search_space):
+    '''
+    Proposes the next sampling point by optimizing the acquisition function.
 
-    train_data = {}
-    t_data = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF',
-              'ChlorineConcentration', 'CinC_ECG_torso', 'Coffee',
-              'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
-              'DistalPhalanxOutlineAgeGroup', 'DistalPhalanxOutlineCorrect', 'DistalPhalanxTW',
-              'Earthquakes', 'ECG200', 'ECG5000', 'ECGFiveDays', 'ElectricDevices', 'FaceAll', 'FaceFour',
-              'FacesUCR', 'FISH', 'FordA', 'FordB', 'Gun_Point', 'Ham', 'HandOutlines',
-              'Haptics', 'Herring', 'InlineSkate', 'InsectWingbeatSound', 'ItalyPowerDemand',
-              'LargeKitchenAppliances', 'Lighting2', 'Lighting7']
-    for each_data in t_data:
-        try:
-            batch, batch_labels = retreive_table(each_data)
-            batch_labels = batch_labels
-            train_data[each_data] = {}
-            train_data[each_data]["X"] = batch
-            train_data[each_data]["y_val"] = batch_labels
-            print("train_data : ", each_data)
-        except:
-            pass
+    Args:
+        acquisition: Acquisition function.
+        X_sample: Sample locations (n x d).
+        Y_sample: Sample values (n x 1).
+        gpr: A GaussianProcessRegressor fitted to samples.
+        search_space: The whole search space where acquisition in run
 
-    v_data = ['MALLAT', 'Meat', 'MedicalImages',
-              'MiddlePhalanxOutlineAgeGroup', 'MiddlePhalanxOutlineCorrect', 'MiddlePhalanxTW',
-              'MoteStrain', 'NonInvasiveFatalECG_Thorax1', 'NonInvasiveFatalECG_Thorax2', 'OliveOil']
+    Returns:
+        Location of the acquisition function maximum.
+    '''
+    dim = X_sample.shape[1]
 
-    validation_data = {}
-    for each_data in t_data:
-        try:
-            batch, batch_labels = retreive_table(each_data)
-            batch_labels = batch_labels
-            validation_data[each_data] = {}
-            validation_data[each_data]["X"] = batch
-            validation_data[each_data]["y_val"] = batch_labels
-            print("val_data : ", each_data)
-        except:
-            pass
+    # Find the best optimum by starting from n_restart different random points.
 
-    testing_data = ['OSULeaf', 'PhalangesOutlinesCorrect', 'Phoneme', 'Plane', 'ProximalPhalanxOutlineAgeGroup',
-                 'ProximalPhalanxOutlineCorrect', 'ProximalPhalanxTW', 'RefrigerationDevices',
-                 'ScreenType', 'ShapeletSim', 'ShapesAll', 'SmallKitchenAppliances', 'SonyAIBORobotSurface',
-                 'SonyAIBORobotSurfaceII', 'StarLightCurves', 'Strawberry', 'SwedishLeaf', 'Symbols',
-                 'synthetic_control', 'ToeSegmentation1', 'ToeSegmentation2', 'Trace', 'TwoLeadECG',
-                 'Two_Patterns', 'UWaveGestureLibraryAll', 'uWaveGestureLibrary_X', 'uWaveGestureLibrary_Y',
-                 'uWaveGestureLibrary_Z', 'wafer', 'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass', 'yoga']
+    aq_func = acquisition(search_space.reshape(-1, dim), X_sample, Y_sample, fsbo)
+    max_i = np.argmax(aq_func)
+    next_loc = search_space[max_i]
 
-    test_data = {}
-    tc = 0
-    for each_data in testing_data:
-        try:
-            batch, batch_labels = retreive_table(each_data)
-            batch_labels = batch_labels
-            test_data[each_data] = {}
-            test_data[each_data]["X"] = batch
-            test_data[each_data]["y_val"] = batch_labels
-            print("test_data : ", each_data)
-            tc+=1
-        except:
-            pass
+    return next_loc.reshape(-1, 1), max_i
 
-    data_dim = train_data[np.random.choice(list(train_data.keys()), 1).item()]["X"].shape[1]
-    print(data_dim)
-    feature_extractor = MLP(data_dim, n_hidden=32, n_layers=3, n_output=None,
-                            batch_norm=False,
-                            dropout_rate=0.0,
-                            use_cnn=False)
-    #n outpuit = out dim
-    #n hidden = number of neurons
-    conf = {
-        "context_size": 10,
-        "device": "cpu",
-        "lr": 0.001,
-        "model_path": 'E:/thesis_work/tsc_transferhpo/benchmark/model.pt',
-        "use_perf_hist": False,
-        "loss_tol": 0.0001,
-        "kernel": "rbf",
-        "ard": None
-    }
 
-    fsbo = FSBO(train_data, validation_data, conf, feature_extractor)
-    fsbo.train(epochs=2500)
+def expected_improvement_fsbo(X, X_sample, Y_sample, fsbo, xi=0.05):
+    '''
+    Computes the EI at points X based on existing samples X_sample
+    and Y_sample using a Gaussian process surrogate model.
 
-    for x in range(tc//2):
+    Args:
+        X: Points at which EI shall be computed (m x d).
+        X_sample: Sample locations (n x d).
+        Y_sample: Sample values (n x 1).
+        gpr: A GaussianProcessRegressor fitted to samples.
+        xi: Exploitation-exploration trade-off parameter.
 
-        tasks = list(test_data.keys())
-        task = test_data.pop(random.choice(tasks))
+    Returns:
+        Expected improvements at points X.
+    '''
+    mu, sigma = fsbo.predict(X_sample, Y_sample, X, w_spt=None, w_qry=None)
 
-        # task = test_data.pop(np.random.choice(test_data.keys()))
+    mu_sample_opt = np.max(Y_sample.detach().cpu().numpy())
 
-        shape = len(task["X"])
-        idx_spt = np.random.randint(0, shape, 5)
-        idx_qry = np.random.randint(0, shape, 5)
+    imp = mu - mu_sample_opt - xi
+    Z = np.divide(imp, sigma)
+    ei = imp * norm.cdf(Z) + sigma * norm.pdf(Z)
 
-        x_qry = torch.FloatTensor(task["X"])[idx_qry].to("cpu")
-        y_qry = torch.FloatTensor(task["y_val"])[idx_qry].to("cpu")
+    return ei.flatten()
 
-        x_spt = torch.FloatTensor(task["X"])[idx_spt].to("cpu")
-        y_spt = torch.FloatTensor(task["y_val"])[idx_spt].to("cpu")
 
-        fsbo.finetuning(x_spt, y_spt, w=None, epochs=100)
-
-        y_predicted, _ = fsbo.predict(x_spt, y_spt, x_qry, w_spt=None, w_qry=None)
-        # print("original", y_qry, "predicted", y_predicted)
-
-        # loss = -fsbo.mll(y_predicted, y_qry)
-
-        loss = np.abs(np.subtract(y_predicted, y_qry))
-        print(loss)
-
-        # print(np.subtract(y_predicted, y_qry))
+# if __name__ == '__main__':
+#
+#     train_data = {}
+#     t_data = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF',
+#               'ChlorineConcentration', 'CinC_ECG_torso', 'Coffee',
+#               'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
+#               'DistalPhalanxOutlineAgeGroup', 'DistalPhalanxOutlineCorrect', 'DistalPhalanxTW',
+#               'Earthquakes', 'ECG200', 'ECG5000', 'ECGFiveDays', 'ElectricDevices', 'FaceAll', 'FaceFour',
+#               'FacesUCR', 'FISH', 'FordA', 'FordB', 'Gun_Point', 'Ham', 'HandOutlines',
+#               'Haptics', 'Herring', 'InlineSkate', 'InsectWingbeatSound', 'ItalyPowerDemand',
+#               'LargeKitchenAppliances', 'Lighting2', 'Lighting7']
+#     for each_data in t_data:
+#         try:
+#             batch, batch_labels = retreive_table(each_data)
+#             batch_labels = batch_labels
+#             train_data[each_data] = {}
+#             train_data[each_data]["X"] = batch
+#             train_data[each_data]["y_val"] = batch_labels
+#             print("train_data : ", each_data)
+#         except:
+#             pass
+#
+#     v_data = ['MALLAT', 'Meat', 'MedicalImages',
+#               'MiddlePhalanxOutlineAgeGroup', 'MiddlePhalanxOutlineCorrect', 'MiddlePhalanxTW',
+#               'MoteStrain', 'NonInvasiveFatalECG_Thorax1', 'NonInvasiveFatalECG_Thorax2', 'OliveOil']
+#
+#     validation_data = {}
+#     for each_data in t_data:
+#         try:
+#             batch, batch_labels = retreive_table(each_data)
+#             batch_labels = batch_labels
+#             validation_data[each_data] = {}
+#             validation_data[each_data]["X"] = batch
+#             validation_data[each_data]["y_val"] = batch_labels
+#             print("val_data : ", each_data)
+#         except:
+#             pass
+#
+#     testing_data = ['OSULeaf', 'PhalangesOutlinesCorrect', 'Phoneme', 'Plane', 'ProximalPhalanxOutlineAgeGroup',
+#                     'ProximalPhalanxOutlineCorrect', 'ProximalPhalanxTW', 'RefrigerationDevices',
+#                     'ScreenType', 'ShapeletSim', 'ShapesAll', 'SmallKitchenAppliances', 'SonyAIBORobotSurface',
+#                     'SonyAIBORobotSurfaceII', 'StarLightCurves', 'Strawberry', 'SwedishLeaf', 'Symbols',
+#                     'synthetic_control', 'ToeSegmentation1', 'ToeSegmentation2', 'Trace', 'TwoLeadECG',
+#                     'Two_Patterns', 'UWaveGestureLibraryAll', 'uWaveGestureLibrary_X', 'uWaveGestureLibrary_Y',
+#                     'uWaveGestureLibrary_Z', 'wafer', 'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass', 'yoga']
+#
+#     test_data = {}
+#     tc = 0
+#     for each_data in testing_data:
+#         try:
+#             batch, batch_labels = retreive_table(each_data)
+#             batch_labels = batch_labels
+#             test_data[each_data] = {}
+#             test_data[each_data]["X"] = batch
+#             test_data[each_data]["y_val"] = batch_labels
+#             print("test_data : ", each_data)
+#             tc += 1
+#         except:
+#             pass
+#
+#     data_dim = train_data[np.random.choice(list(train_data.keys()), 1).item()]["X"].shape[1]
+#     print(data_dim)
+#     feature_extractor = MLP(data_dim, n_hidden=32, n_layers=3, n_output=None,
+#                             batch_norm=False,
+#                             dropout_rate=0.0,
+#                             use_cnn=False)
+#     # n outpuit = out dim
+#     # n hidden = number of neurons
+#     conf = {
+#         "context_size": 10,
+#         "device": "cpu",
+#         "lr": 0.001,
+#         "model_path": 'E:/thesis_work/tsc_transferhpo/benchmark/model.pt',
+#         "use_perf_hist": False,
+#         "loss_tol": 0.0001,
+#         "kernel": "rbf",
+#         "ard": None
+#     }
+#
+#     fsbo = FSBO(train_data, validation_data, conf, feature_extractor)
+#     fsbo.train(epochs=2500)
+#
+#     for x in range(tc // 2):
+#         tasks = list(test_data.keys())
+#         task = test_data.pop(random.choice(tasks))
+#
+#         # task = test_data.pop(np.random.choice(test_data.keys()))
+#
+#         shape = len(task["X"])
+#         idx_spt = np.random.randint(0, shape, 5)
+#         idx_qry = np.random.randint(0, shape, 5)
+#
+#         x_qry = torch.FloatTensor(task["X"])[idx_qry].to("cpu")
+#         y_qry = torch.FloatTensor(task["y_val"])[idx_qry].to("cpu")
+#
+#         x_spt = torch.FloatTensor(task["X"])[idx_spt].to("cpu")
+#         y_spt = torch.FloatTensor(task["y_val"])[idx_spt].to("cpu")
+#
+#         fsbo.finetuning(x_spt, y_spt, w=None, epochs=100)
+#
+#         y_predicted, _ = fsbo.predict(x_spt, y_spt, x_qry, w_spt=None, w_qry=None)
+#         # print("original", y_qry, "predicted", y_predicted)
+#
+#         # loss = -fsbo.mll(y_predicted, y_qry)
+#
+#         loss = np.abs(np.subtract(y_predicted, y_qry))
+#         print(loss)
+#
+#         # print(np.subtract(y_predicted, y_qry))

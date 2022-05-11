@@ -67,7 +67,7 @@ results_dir = root_dir + '/Results'
 
 if __name__ == '__main__':
 
-    run_name = 'kfolds_with_ES_100_0.05'
+    run_name = 'kfolds_RS_benchmarks'
     run_folder = results_dir + '/' + run_name + '/'
 
     if not os.path.exists(run_folder):
@@ -88,38 +88,41 @@ if __name__ == '__main__':
 
     cs.add_hyperparameters([depth, use_residual, nb_filters, use_bottleneck, batch_size, kernel_size])
 
-    if not os.path.exists(run_folder + '/RS_sampled_configs.json'):
+    if os.path.exists(run_folder + '/RS_sampled_configs.json'):
+        with open(run_folder + "/RS_sampled_configs.json", "r") as jsonfile:
+            conf_list = json.load(jsonfile)
+    else:
         configurations = cs.sample_configuration(n_iter)
         with open(run_folder + '/RS_sampled_configs.json', 'a+') as f:
             conf_list = {'configs': [i.get_dictionary() for i in configurations]}
             json.dump(conf_list, f)
             f.write("\n")
-    else:
-        with open(run_folder + "/RS_sampled_configs.json", "r") as jsonfile:
-            conf_list = json.load(jsonfile)
 
     # folders = UNIVARIATE_DATASET_NAMES
     for _, folders in parser.parse_args()._get_kwargs():
         print(folders)
-    # for folders in UNIVARIATE_DATASET_NAMES:
+        # for folders in UNIVARIATE_DATASET_NAMES:
         # print(folders)
         for name in folders:
-                # iteration_number = 0
+            iteration_number = 0
 
             print(name)
-            # iteration_to_run = 0
+            iteration_to_run = 0
 
-            # if os.path.exists(run_folder + 'Running_' + name + '.json'):
-            #     df = pd.read_json(run_folder + 'Running_' + name + '.json', lines=True)
-            #     iteration_to_run = int(df.shape[0]) + 1
+            if os.path.exists(run_folder + 'Running_' + name + '.json'):
+                df = pd.read_json(run_folder + 'Running_' + name + '.json', lines=True)
+                iteration_to_run = int(df.shape[0]) +1
+                print(iteration_to_run)
 
-            # dataset_names:
-            for conf in list(conf_list.values())[0]:
-                # print("Running iteration: ", iteration_number)
-                # if iteration_number < iteration_to_run:
-                #     iteration_number += 1
-                #     continue
+            list_conf = conf_list["configs"]
+            print(len(list_conf))
+            for conf in list_conf:
+                # print(conf)
+                print("Running iteration: ", iteration_number)
+                if iteration_number < iteration_to_run:
+                    iteration_number += 1
+                    continue
+                # print("running iteration------------", iteration_number)
                 objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
-                objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
-                break
-                # iteration_number += 1
+                iteration_number += 1
+            print(name, "Iterations run: ", iteration_number)

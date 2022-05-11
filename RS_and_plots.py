@@ -8,7 +8,7 @@ import glob
 
 import tqdm.std
 from matplotlib import pyplot as plt
-from all_functions import extract_grid, results_dir, folders
+from all_functions import extract_grid, results_dir, folders, root_dir
 
 parser = argparse.ArgumentParser()
 
@@ -23,7 +23,7 @@ def hpo_rs():
         try:
             iterations_ran = 0
 
-            read_dir = results_dir + 'kfolds_RS_benchmarks/Running_' + iter_data + '.json'
+            read_dir = root_dir + '/Final_benchmarks' + '/Running_' + iter_data + '.json'
             grid_m, acc_m = extract_grid(read_dir)
 
             if os.path.exists(work_dir + 'RS_' + iter_data + '.json'):
@@ -63,23 +63,47 @@ if __name__ == '__main__':
     if rs_run:
         hpo_rs()
 
+    names2 = ['GP_random',
+              'GP_topn',
+              'GP_tidal',
+              'GP_diverse',
+              # 'FSBO_diverse_init',
+              ]
+
     # Plots
     names = [#'RS_run',
-             # 'BO_GP_rand_init',
+             'BO_GP_rand_init',
              # 'BO_FSBO_rand_init',
-             # 'BO_GP_topn_init_fawaz',
-             # 'BO_GP_topn_init_anand',
-             # 'BO_GP_tidal_init_fawaz',
-             # 'BO_GP_tidal_init_anand',
-             # 'BO_GP_diverse_init_fawaz',
-             'BO_GP_diverse_init_anand',
+
+             # 'BO_GP_topn_init_IDSM',
+             # 'BO_GP_tidal_init_IDSM',
+             # 'BO_GP_diverse_init_IDSM',
+
+             'BO_GP_topn_init_anand_agg4',
+             'BO_GP_tidal_init_anand_agg4',
+             'BO_GP_diverse_init_anand_agg4',
+
+             # 'BO_GP_topn_init_w_dist',
+             # 'BO_GP_tidal_init_w_dist',
+             # 'BO_GP_diverse_init_w_dist',
+
+             # 'BO_GP_diverse_init_anand',
+             # 'BO_GP_diverse_init_anand_agg2',
+             # 'BO_GP_diverse_init_anand_agg3',
+             # 'BO_GP_diverse_init_anand_agg4',
+             # 'BO_GP_topn_init_anand_agg4',
+             # 'BO_FSBO_topn_init_anand_agg4',
+             # 'BO_GP_diverse_init_anand_agg5',
+             # 'GP_greedy_start',
              # 'BO_GP_diverse_init_smfo',
              # 'BO_FSBO_topn_init_fawaz',
              # 'BO_FSBO_topn_init_anand',
              # 'BO_FSBO_tidal_init_fawaz',
              # 'BO_FSBO_tidal_init_anand',
-             # 'BO_FSBO_diverse_init_fawaz',
-             'BO_FSBO_diverse_init_anand',
+             # 'BO_FSBO_diverse_init_anand',
+             # 'BO_FSBO_diverse_init_anand_agg4',
+             # 'trial_tflr_fsbo_method3_a2',
+             # 'trial_tflr_smbo_method3_fw'
              ]
 
     Big_Y = []
@@ -98,15 +122,17 @@ if __name__ == '__main__':
         dfs = []
 
         for each_folders in names:
-            a = results_dir + each_folders + '/'
-            b = '*' + name + '.json'
-            for file in glob.glob(os.path.join(a,b)):
+            a = results_dir + each_folders + '/' + '*' + name + '.json'
+            # print(os.listdir(results_dir + each_folders + '/'))
+            # print(glob.glob(a))
+            for file in glob.glob(a):
                 # print(file)
                 dfs.append(pd.read_json(file, lines=True))
 
         dfs_orig = pd.read_json(results_dir + 'kfolds_RS_benchmarks/Running_' + name + '.json', lines=True)
 
         dfs_acc = []
+        # print(len(dfs))
         for df in dfs:
             df = df.head(50)
             dfs_acc.append(df['accuracy'].values if 'accuracy' in df else df['acc'].values)
@@ -144,8 +170,9 @@ if __name__ == '__main__':
     plt.clf()
     for iter_index in range(len(Big_Y)):
         temp_v = sum(Big_Y[iter_index]) / len(Big_Y[iter_index])
-        plt.plot(np.arange(len(temp_v)), temp_v, label=names[iter_index])
+        plt.plot(np.arange(len(temp_v)), temp_v, label=names2[iter_index])
 
+    # plt.title('Initial configurations in FSBO')
     # plt.legend(loc='upper left')
     plt.legend()
     plt.savefig(results_dir + 'trial_Graphs/00_AVERAGED_k2.png')

@@ -3,6 +3,7 @@ import ConfigSpace
 import os
 import argparse
 import json
+import shutil
 
 from k_folds import objective_renewed
 from ConfigSpace import hyperparameters as CSH
@@ -96,5 +97,19 @@ if __name__ == '__main__':
         list_conf = conf_list["configs"]
         print(len(list_conf))
         for iter_ind in iter_confs:
+
+            source1 = root_dir + '/data/UCR_TS_Archive_2015/TSC/' + name + '/' + name + '_TEST'
+            source2 = root_dir + '/data/UCR_TS_Archive_2015/TSC/' + name + '/' + name + '_TRAIN'
+            if not os.path.exists(root_dir + '/big_d/temp' + str(iter_ind) + '/'):
+                os.makedirs(root_dir + '/big_d/temp' + str(iter_ind) + '/')
+            target1 = root_dir + '/big_d/temp' + str(iter_ind) + '/' + name + '_TEST'
+            target2 = root_dir + '/big_d/temp' + str(iter_ind) + '/' + name + '_TRAIN'
+
+            shutil.copyfile(source1, target1)
+            shutil.copyfile(source2, target2)
+
             conf = list_conf[iter_ind]
-            objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
+            objective_renewed(conf, name, run=run_name, n_splits=5, output_dir= root_dir + '/big_d/temp' + str(iter_ind) + '/')
+
+            os.remove(target1)
+            os.remove(target2)

@@ -16,6 +16,45 @@ UNIVARIATE_DATASET_NAMES = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly'
                             'Two_Patterns', 'UWaveGestureLibraryAll', 'uWaveGestureLibrary_X', 'uWaveGestureLibrary_Y',
                             'uWaveGestureLibrary_Z', 'wafer', 'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass', 'yoga']
 
+# ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF', 'Coffee',
+#        'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
+#        'DistalPhalanxOutlineAgeGroup', 'DistalPhalanxOutlineCorrect', 'DistalPhalanxTW',
+#        'Earthquakes', 'ECG200', 'ECGFiveDays', 'FaceAll', 'FaceFour',
+#        'FISH', 'Gun_Point', 'Ham', 'Haptics', 'Herring', 'InlineSkate', 'ItalyPowerDemand',
+#        'LargeKitchenAppliances', 'Lighting2', 'Lighting7', 'Meat', 'MedicalImages',
+#        'MiddlePhalanxOutlineAgeGroup', 'MiddlePhalanxOutlineCorrect', 'MiddlePhalanxTW',
+#        'MoteStrain', 'OliveOil', 'OSULeaf', 'Plane', 'ProximalPhalanxOutlineAgeGroup',
+#        'ProximalPhalanxOutlineCorrect', 'ProximalPhalanxTW', 'RefrigerationDevices',
+#        'ScreenType', 'ShapeletSim', 'ShapesAll', 'SmallKitchenAppliances', 'SonyAIBORobotSurface',
+#        'SonyAIBORobotSurfaceII', 'Strawberry', 'SwedishLeaf', 'Symbols',
+#        'synthetic_control', 'ToeSegmentation1', 'Trace', 'TwoLeadECG',
+#        'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass']
+
+# ['ChlorineConcentration', 'CinC_ECG_torso', 'ECGFiveDays', 'ElectricDevices',
+#                             'FacesUCR', 'FordA', 'FordB', 'HandOutlines', 'InsectWingbeatSound',
+#                             'MALLAT', 'NonInvasiveFatalECG_Thorax1', 'NonInvasiveFatalECG_Thorax2',
+#                             'PhalangesOutlinesCorrect', 'Phoneme', 'StarLightCurves',
+#                             'Two_Patterns', 'UWaveGestureLibraryAll', 'uWaveGestureLibrary_X', 'uWaveGestureLibrary_Y',
+#                             'uWaveGestureLibrary_Z', 'wafer', 'yoga']
+
+# ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF',
+#                         'ChlorineConcentration', 'CinC_ECG_torso', 'Coffee',
+#                         'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
+#                         'DistalPhalanxOutlineAgeGroup', 'DistalPhalanxOutlineCorrect', 'DistalPhalanxTW',
+#                         'Earthquakes', 'ECG200', 'ECG5000', 'ECGFiveDays', 'ElectricDevices', 'FaceAll', 'FaceFour',
+#                         'FacesUCR', 'FISH', 'FordA', 'FordB', 'Gun_Point', 'Ham', 'HandOutlines',
+#                         'Haptics', 'Herring', 'InlineSkate', 'InsectWingbeatSound', 'ItalyPowerDemand',
+#                         'LargeKitchenAppliances', 'Lighting2', 'Lighting7', 'MALLAT', 'Meat', 'MedicalImages',
+#                         'MiddlePhalanxOutlineAgeGroup', 'MiddlePhalanxOutlineCorrect', 'MiddlePhalanxTW',
+#                         'MoteStrain', 'NonInvasiveFatalECG_Thorax1', 'NonInvasiveFatalECG_Thorax2', 'OliveOil',
+#                         'OSULeaf', 'PhalangesOutlinesCorrect', 'Phoneme', 'Plane', 'ProximalPhalanxOutlineAgeGroup',
+#                         'ProximalPhalanxOutlineCorrect', 'ProximalPhalanxTW', 'RefrigerationDevices',
+#                         'ScreenType', 'ShapeletSim', 'ShapesAll', 'SmallKitchenAppliances', 'SonyAIBORobotSurface',
+#                         'SonyAIBORobotSurfaceII', 'StarLightCurves', 'Strawberry', 'SwedishLeaf', 'Symbols',
+#                         'synthetic_control', 'ToeSegmentation1', 'ToeSegmentation2', 'Trace', 'TwoLeadECG',
+#                         'Two_Patterns', 'UWaveGestureLibraryAll', 'uWaveGestureLibrary_X', 'uWaveGestureLibrary_Y',
+#                         'uWaveGestureLibrary_Z', 'wafer', 'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass', 'yoga']
+
 
 UNIVARIATE_ARCHIVE_NAMES = ['TSC']
 

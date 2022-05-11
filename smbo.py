@@ -26,7 +26,6 @@ def expected_improvement(X, X_sample, Y_sample, gpr, xi=0.05):
     imp = mu - mu_sample_opt - xi
     Z = imp / sigma
     ei = imp * norm.cdf(Z) + sigma * norm.pdf(Z)
-
     return ei.flatten()
 
 

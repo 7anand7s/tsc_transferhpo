@@ -9,9 +9,10 @@ import argparse
 
 from ConfigSpace import hyperparameters as CSH
 from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import ConstantKernel, Matern
+from sklearn.gaussian_process.kernels import ConstantKernel, Matern, RBF
 from smbo import propose_location, expected_improvement
 from inception import objective
+from k_folds import objective_renewed
 from transfer_learning import train
 from utils.constants import UNIVARIATE_DATASET_NAMES, UNIVARIATE_ARCHIVE_NAMES
 from utils.utils import root_dir
@@ -60,13 +61,16 @@ def create_gridm():
                             counter += 1
     return gridm_matrix
 
-results_dir = root_dir + '/Results'
 
+results_dir = root_dir + '/Results'
 
 if __name__ == '__main__':
     parser.add_argument('--nargs', nargs='+')
+    run_name = 'SMBO'
+    run_folder = results_dir + '/' + run_name + '/'
 
-    n_iter = 200
+    if not os.path.exists(run_folder):
+        os.makedirs(run_folder)
 
     m52 = ConstantKernel(1.0) * Matern(length_scale=1.0, nu=2.5)
     gpr = GaussianProcessRegressor(kernel=m52)
@@ -74,12 +78,14 @@ if __name__ == '__main__':
     folders = UNIVARIATE_DATASET_NAMES
     for _, folders in parser.parse_args()._get_kwargs():
         for name in folders:
-            iterations_ran = 0
-            print("Dataset: ", name)
 
-            folder_directory = results_dir + '/SMBO/' + name
-            if not os.path.exists(folder_directory):
-                os.makedirs(folder_directory)
+            print("Dataset", name)
+            n_iter = 200
+            iterations_ran = 0
+
+            if os.path.exists(run_folder + '/Running_' + name + '.json'):
+                df = pd.read_json(run_folder + '/Running_' + name + '.json', lines=True)
+                iterations_ran = int(df.shape[0]) + 1
 
             grid_matrix = create_gridm()
 
@@ -87,23 +93,47 @@ if __name__ == '__main__':
             X_init = []
             Y_init = []
 
-            for x0 in np.random.randint(low=0, high=grid_matrix.shape[0]-1, size=(10,)):
-                temp = grid_matrix[x0, :].astype(int)
+            print(iterations_ran)
 
-                conf = {'depth': int(temp[4]), 'nb_filters': int(temp[2]),
-                        'batch_size': int(temp[3]), 'kernel_size': int(temp[5]),
-                        'use_residual': bool(temp[0]), 'use_bottleneck': bool(temp[1])}
+            if iterations_ran > 0:
+                df['use_bottleneck'] = df['use_bottleneck'].map({'True': True, 'False': False})
+                df['use_residual'] = df['use_residual'].map({'True': True, 'False': False})
+                for ran_count in range(iterations_ran - 1):
+                    index = int(np.where((grid_matrix[:, 4] == df['depth'][ran_count]) &
+                                         (grid_matrix[:, 1] == df['use_bottleneck'][ran_count]) &
+                                         (grid_matrix[:, 3] == df['batch_size'][ran_count]) &
+                                         (grid_matrix[:, 5] == df['kernel_size'][ran_count]) &
+                                         (grid_matrix[:, 0] == df['use_residual'][ran_count]) &
+                                         (grid_matrix[:, 2] == df['nb_filters'][ran_count]))[0])
 
-                tempo = objective(conf, name, run='SMBO',output_dir=folder_directory + '/' + 'config' + str(iterations_ran))
-                X_init.append(temp)
-                Y_init.append(tempo)
+                    X_init.append(grid_matrix[index, :].astype(int))
+                    Y_init.append(df['acc'][ran_count])
 
-                grid_matrix = np.delete(grid_matrix, x0, 0)
-                iterations_ran += 1
+                    grid_matrix = np.delete(grid_matrix, index, 0)
 
-            # Initialize samples
-            X_sample = np.array(X_init).reshape(-1, dim)
-            Y_sample = np.array(Y_init).reshape(-1, 1)
+                # Initialize samples
+                X_sample = np.array(X_init).reshape(-1, dim)
+                Y_sample = np.array(Y_init).reshape(-1, 1)
+
+            else:
+                for _ in range(10):
+                    x0 = np.random.randint(0, grid_matrix.shape[0] - 1)
+                    temp = grid_matrix[x0, :].astype(int)
+
+                    conf = {'depth': int(temp[4]), 'nb_filters': int(temp[2]),
+                            'batch_size': int(temp[3]), 'kernel_size': int(temp[5]),
+                            'use_residual': bool(temp[0]), 'use_bottleneck': bool(temp[1])}
+
+                    tempo = objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
+                    X_init.append(temp)
+                    Y_init.append(tempo)
+
+                    grid_matrix = np.delete(grid_matrix, x0, 0)
+                    iterations_ran += 1
+
+                # Initialize samples
+                X_sample = np.array(X_init).reshape(-1, dim)
+                Y_sample = np.array(Y_init).reshape(-1, 1)
 
             while iterations_ran < n_iter:
                 # Update Gaussian process with existing samples
@@ -119,7 +149,7 @@ if __name__ == '__main__':
 
                 # objective
                 conf = get_conf2(int(index), grid_matrix)
-                Y_temp = objective(conf, name, run='SMBO', output_dir=folder_directory + '/' + 'config' + str(iterations_ran))
+                Y_temp = objective_renewed(conf, name, run=run_name, n_splits=5, output_dir=run_folder)
                 Y_next = np.array(Y_temp)
 
                 X_val = grid_matrix[int(index), :].astype(int)

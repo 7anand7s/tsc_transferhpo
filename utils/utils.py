@@ -20,8 +20,8 @@ matplotlib.use('agg')
 matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = 'Arial'
 
-
-root_dir = '/home/fr/fr_fr/fr_aa367/tsc_transferhpo'
+# root_dir = '/media/anand7s/Shared_groß/thesis_work/tsc_transferhpo'
+root_dir = 'E:/thesis_work/tsc_transferhpo'
 
 
 def check_if_file_exits(file_name):
@@ -126,7 +126,7 @@ def save_test_duration(file_name, test_duration):
     res.to_csv(file_name, index=False)
 
 
-def transform_labels(y_train, y_test):
+def transform_labels(y_train, y_test=None):
     """
     Transform label to min equal zero and continuous
     For example if we have [1,3,4] --->  [0,1,2]
@@ -135,15 +135,21 @@ def transform_labels(y_train, y_test):
     # init the encoder
     encoder = LabelEncoder()
     # concat train and test to fit
-    y_train_test = np.concatenate((y_train, y_test), axis=0)
+    if y_test:
+        y_train_test = np.concatenate((y_train, y_test), axis=0)
+    else:
+        y_train_test = y_train
     # fit the encoder
     encoder.fit(y_train_test)
     # transform to min zero and continuous labels
     new_y_train_test = encoder.transform(y_train_test)
     # resplit the train and test
-    new_y_train = new_y_train_test[0:len(y_train)]
-    new_y_test = new_y_train_test[len(y_train):]
-    return new_y_train, new_y_test
+    if y_test:
+        new_y_train = new_y_train_test[0:len(y_train)]
+        new_y_test = new_y_train_test[len(y_train):]
+        return new_y_train, new_y_test
+    else:
+        return new_y_train_test
 
 
 def generate_results_csv(output_file_name, root_dir, clfs):

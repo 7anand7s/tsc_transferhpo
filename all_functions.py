@@ -13,27 +13,51 @@ import fsbo
 from fsbo import expected_improvement_fsbo
 
 results_dir = root_dir + '/Results/'
-dist_smfo = pd.read_csv(root_dir + '/tsc_transferhpoSMFO_distancing.csv')
-dist_fawaz = pd.read_csv(root_dir + '/datassimilar-datasets_hwaz_m.csv')
-dist_anand = pd.read_csv(root_dir + '/datassimilar-datasets_anand2_m3.csv')
-dist_anand_agg2 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr2.csv')
-dist_anand_agg3 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr3.csv')
-dist_anand_agg4 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand_m3_aagr4.csv')
-dist_anand_agg5 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr5.csv')
+# dist_smfo = pd.read_csv(root_dir + '/tsc_transferhpoSMFO_distancing.csv')
+dist_fawaz = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_hwaz_m.csv')
+# dist_anand = pd.read_csv(root_dir + '/datassimilar-datasets_anand2_m3.csv')
+w_dist = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand_w_dist1.csv')
+# dist_anand_agg2 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr2.csv')
+# dist_anand_agg3 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr3.csv')
+dist_anand_agg4 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand_m3_agg4.csv')
+# dist_anand_agg5 = pd.read_csv(root_dir + '/Distances_csv/datassimilar-datasets_anand2_m3_aggr5.csv')
 
-folders = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF', 'Coffee',
+folders = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF',
+           'ChlorineConcentration', 'CinC_ECG_torso', 'Coffee',
            'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
            'DistalPhalanxOutlineAgeGroup', 'DistalPhalanxOutlineCorrect', 'DistalPhalanxTW',
-           'Earthquakes', 'ECG200', 'ECGFiveDays', 'FaceAll', 'FaceFour',
-           'FISH', 'Gun_Point', 'Ham', 'Haptics', 'Herring', 'InlineSkate', 'ItalyPowerDemand',
-           'LargeKitchenAppliances', 'Lighting2', 'Lighting7', 'Meat', 'MedicalImages',
+           'Earthquakes', 'ECG200', 'ECG5000', 'ECGFiveDays',
+           # 'ElectricDevices',
+           'FaceAll', 'FaceFour',
+           'FacesUCR', 'FISH', 'FordA', 'FordB', 'Gun_Point', 'Ham', 'HandOutlines',
+           'Haptics', 'Herring', 'InlineSkate', 'InsectWingbeatSound', 'ItalyPowerDemand',
+           'LargeKitchenAppliances', 'Lighting2', 'Lighting7', 'MALLAT', 'Meat', 'MedicalImages',
            'MiddlePhalanxOutlineAgeGroup', 'MiddlePhalanxOutlineCorrect', 'MiddlePhalanxTW',
-           'MoteStrain', 'OliveOil', 'OSULeaf', 'Plane', 'ProximalPhalanxOutlineAgeGroup',
+           'MoteStrain', 'NonInvasiveFatalECG_Thorax1', 'NonInvasiveFatalECG_Thorax2', 'OliveOil',
+           'OSULeaf', 'PhalangesOutlinesCorrect', 'Phoneme', 'Plane', 'ProximalPhalanxOutlineAgeGroup',
            'ProximalPhalanxOutlineCorrect', 'ProximalPhalanxTW', 'RefrigerationDevices',
            'ScreenType', 'ShapeletSim', 'ShapesAll', 'SmallKitchenAppliances', 'SonyAIBORobotSurface',
            'SonyAIBORobotSurfaceII', 'Strawberry', 'SwedishLeaf', 'Symbols',
-           'synthetic_control', 'ToeSegmentation1', 'Trace', 'TwoLeadECG',
-           'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass']
+           'synthetic_control', 'ToeSegmentation1', 'ToeSegmentation2', 'Trace', 'TwoLeadECG',
+           'Two_Patterns', 'UWaveGestureLibraryAll', 'uWaveGestureLibrary_X', 'uWaveGestureLibrary_Y',
+           'uWaveGestureLibrary_Z', 'wafer', 'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass', 'yoga']
+
+
+
+
+# ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken', 'Car', 'CBF', 'Coffee',
+#             'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
+#             'DistalPhalanxOutlineAgeGroup', 'DistalPhalanxOutlineCorrect', 'DistalPhalanxTW',
+#             'Earthquakes', 'ECG200', 'ECGFiveDays', 'FaceAll', 'FaceFour',
+#             'FISH', 'Gun_Point', 'Ham', 'Haptics', 'Herring', 'InlineSkate', 'ItalyPowerDemand',
+#             'LargeKitchenAppliances', 'Lighting2', 'Lighting7', 'Meat', 'MedicalImages',
+#             'MiddlePhalanxOutlineAgeGroup', 'MiddlePhalanxOutlineCorrect', 'MiddlePhalanxTW',
+#             'MoteStrain', 'OliveOil', 'OSULeaf', 'Plane', 'ProximalPhalanxOutlineAgeGroup',
+#             'ProximalPhalanxOutlineCorrect', 'ProximalPhalanxTW', 'RefrigerationDevices',
+#             'ScreenType', 'ShapeletSim', 'ShapesAll', 'SmallKitchenAppliances', 'SonyAIBORobotSurface',
+#             'SonyAIBORobotSurfaceII', 'Strawberry', 'SwedishLeaf', 'Symbols',
+#             'synthetic_control', 'ToeSegmentation1', 'Trace', 'TwoLeadECG',
+#             'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass']
 
 
 def choose_method(n_ws, df2, method='m1'):
@@ -67,7 +91,7 @@ def choose_method(n_ws, df2, method='m1'):
 
 
 def extract_grid(r_dir):
-    df = pd.read_json(r_dir, lines=True)
+    df = pd.read_json(r_dir) # , lines=True)
     df['use_bottleneck'] = df['use_bottleneck'].map({'True': 1, 'False': 0, 'true': 1, 'false': 0})
     df['use_residual'] = df['use_residual'].map({'True': 1, 'False': 0, 'true': 1, 'false': 0})
     df_grid_m = df[['depth', 'nb_filters', 'batch_size', 'kernel_size', 'use_residual', 'use_bottleneck']]
@@ -85,10 +109,12 @@ def dissolving_grid(datasets):
     work_dir = results_dir + 'trial_benchmark_sorted/'
     if os.path.exists(work_dir):
         shutil.rmtree(work_dir)
-        os.mkdir(work_dir)
+    os.mkdir(work_dir)
     for each in datasets:
-        r_d = results_dir + 'kfolds_RS_benchmarks/Running_' + each + '.json'
-        df = pd.read_json(r_d, lines=True)
+        # print(each)
+        r_d = root_dir + '/Final_benchmarks' + '/Running_' + each + '.json'
+        print(r_d)
+        df = pd.read_json(r_d)  # , lines=True)
         df_s = df.sort_values(by="acc", ascending=False)
         acc_sorted_index = df_s.index.tolist()
         g1, a1 = extract_grid(r_d)
@@ -102,7 +128,7 @@ def dissolving_grid(datasets):
 
 
 def retrieve_matrices(directory, dataset_name):
-    df = pd.read_json(directory + dataset_name + '.json', lines=True)
+    df = pd.read_json(directory + dataset_name + '.json') # , lines=True)
 
     df['depth'] = df['depth'].astype(int)
     df['nb_filters'] = df['nb_filters'].astype(int)
@@ -146,7 +172,7 @@ def extracting_indices(run_length, df2, grid_m, acc_m, save_dir, iterations_ran=
             # # use_bottleneck nb_filters Batch_size use_residual depth kernel_size --- fsbo
             # ['use_residual', 'use_bottleneck', 'nb_filters', 'batch_size', 'depth', 'kernel_size'] --grid
             ee = int(index[0])
-            print(ee)
+            # print(ee)
         try:
             X = grid_m[ee]
             Y = float(acc_m[ee])
@@ -202,7 +228,7 @@ def fitting_smbo(gpr, w_dir, total_iters_ran, n_iters, grid_matrix, acc_matrixx,
 
 
 def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, fsbo_tune_epochs, transfer=False,
-                 n_split=5, tf_method='m1', dist_data=None, cc=None):
+                 n_split=5, tf_method='m1', dist_data=None, cc=None, frozen=False, lr_rate=0.0001):
     # copying files to avoid emory conflicts for parallel FSBO runs
     # copying the sorted folder
     to_copy_files1 = os.listdir(results_dir + 'trial_benchmark_sorted/')
@@ -213,14 +239,14 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
         shutil.copy(results_dir + 'trial_benchmark_sorted/' + files, target_dir1)
 
     # copying the original benchmark folder
-    to_copy_files2 = os.listdir(results_dir + 'kfolds_RS_benchmarks/')
-    target_dir2 = results_dir + 'kfolds_RS_benchmarks' + str(cc) + '/'
+    to_copy_files2 = os.listdir(root_dir + '/Final_benchmarks')
+    target_dir2 = root_dir + '/Final_benchmarks' + str(cc) + '/'
     if not os.path.exists(target_dir2):
         os.mkdir(target_dir2)
     for files in to_copy_files2:
-        shutil.copy(results_dir + 'kfolds_RS_benchmarks/' + files, target_dir2)
+        shutil.copy(root_dir + '/Final_benchmarks/' + files, target_dir2)
 
-    parent_dir = results_dir + 'kfolds_RS_benchmarks' + str(cc) + '/Running_'
+    parent_dir = root_dir + '/Final_benchmarks' + str(cc) + '/Running_'
 
     folders_split = np.array_split(total_data, n_split)
 
@@ -264,7 +290,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
         conf = {
             "context_size": 10,
             "device": "cpu",
-            "lr": 0.0001,
+            "lr": lr_rate,
             "model_path": model_path + 'model.pt',
             "use_perf_hist": False,
             "loss_tol": 0.0001,
@@ -360,7 +386,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
                 x_spt = torch.FloatTensor(task["X"])[X_spt].to("cpu")
                 y_spt = torch.FloatTensor(task["y_val"])[X_spt].to("cpu")
 
-                fsbo_func.finetuning(x_spt, y_spt, w=None, epochs=fsbo_tune_epochs, freeze=False)
+                fsbo_func.finetuning(x_spt, y_spt, w=None, epochs=fsbo_tune_epochs, freeze=frozen)
 
                 search_space = torch.FloatTensor(X_MATRIX).to("cpu")
 

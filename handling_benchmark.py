@@ -11,7 +11,9 @@ datasets = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken',
             'ChlorineConcentration', 'CinC_ECG_torso', 'Coffee',
             'Computers', 'Cricket_X', 'Cricket_Y', 'Cricket_Z', 'DiatomSizeReduction',
             'DistalPhalanxOutlineAgeGroup', 'DistalPhalanxOutlineCorrect', 'DistalPhalanxTW',
-            'Earthquakes', 'ECG200', 'ECG5000', 'ECGFiveDays', 'ElectricDevices', 'FaceAll', 'FaceFour',
+            'Earthquakes', 'ECG200', 'ECG5000', 'ECGFiveDays',
+            # 'ElectricDevices',
+            'FaceAll', 'FaceFour',
             'FacesUCR', 'FISH', 'FordA', 'FordB', 'Gun_Point', 'Ham', 'HandOutlines',
             'Haptics', 'Herring', 'InlineSkate', 'InsectWingbeatSound', 'ItalyPowerDemand',
             'LargeKitchenAppliances', 'Lighting2', 'Lighting7', 'MALLAT', 'Meat', 'MedicalImages',
@@ -20,7 +22,9 @@ datasets = ['50words', 'Adiac', 'ArrowHead', 'Beef', 'BeetleFly', 'BirdChicken',
             'OSULeaf', 'PhalangesOutlinesCorrect', 'Phoneme', 'Plane', 'ProximalPhalanxOutlineAgeGroup',
             'ProximalPhalanxOutlineCorrect', 'ProximalPhalanxTW', 'RefrigerationDevices',
             'ScreenType', 'ShapeletSim', 'ShapesAll', 'SmallKitchenAppliances', 'SonyAIBORobotSurface',
-            'SonyAIBORobotSurfaceII', 'StarLightCurves', 'Strawberry', 'SwedishLeaf', 'Symbols',
+            'SonyAIBORobotSurfaceII',
+            # 'StarLightCurves',
+            'Strawberry', 'SwedishLeaf', 'Symbols',
             'synthetic_control', 'ToeSegmentation1', 'ToeSegmentation2', 'Trace', 'TwoLeadECG',
             'Two_Patterns', 'UWaveGestureLibraryAll', 'uWaveGestureLibrary_X', 'uWaveGestureLibrary_Y',
             'uWaveGestureLibrary_Z', 'wafer', 'Wine', 'WordsSynonyms', 'Worms', 'WormsTwoClass', 'yoga']
@@ -42,7 +46,7 @@ def check_for_duplicates():
     for dataset in datasets:
         try:
             df = pd.read_json(
-                'E:/thesis_work/tsc_transferhpo/Results/kfolds_RS_benchmarks/Running_' + dataset + '.json', lines = True)
+                'E:/thesis_work/tsc_transferhpo/Results/kfolds_RS_benchmarks/Running_' + dataset + '.json', lines=True)
             bool_series = df.duplicated(
                 subset=['depth', 'use_residual', 'nb_filters', 'use_bottleneck', 'batch_size', 'kernel_size'])
             if len(bool_series[bool_series]) > 0:
@@ -74,7 +78,7 @@ def run_missing_config(listed):
 
     for dataset in listed:
         try:
-            df = pd.read_json( root_dir + '/Results/kfolds_RS_benchmarks/Running_' + dataset + '.json', lines=True)
+            df = pd.read_json(root_dir + '/Results/kfolds_RS_benchmarks/Running_' + dataset + '.json', lines=True)
         except Exception as e:
             print(e)
             continue
@@ -137,15 +141,18 @@ def handling_json(given):
             if os.path.exists(save_file):
                 os.remove(save_file)
             q_df = pd.read_json(query_file, lines=True)
-            q_df = q_df.drop_duplicates(subset=['depth', 'nb_filters', 'batch_size', 'kernel_size', 'use_residual', 'use_bottleneck'])
-            q_df = q_df.sort_values(by=['depth', 'nb_filters', 'batch_size', 'kernel_size', 'use_residual', 'use_bottleneck'])
+            q_df = q_df.drop_duplicates(
+                subset=['depth', 'nb_filters', 'batch_size', 'kernel_size', 'use_residual', 'use_bottleneck'])
+            # q_df = q_df.sort_values(
+            #     by=['depth', 'nb_filters', 'batch_size', 'kernel_size', 'use_residual', 'use_bottleneck'])
             q_df = q_df.reset_index(drop=True)
             q_df.to_json(save_file)
 
 
 # count()
 # check_for_duplicates()
-run_missing_config(['FordB'])
+# run_missing_config(
+#     ['uWaveGestureLibrary_X', 'uWaveGestureLibrary_Y', 'NonInvasiveFatalECG_Thorax1', 'NonInvasiveFatalECG_Thorax2'])
 # create proper json file
-# handling_json(datasets)
+handling_json(datasets)
 # os.system("shutdown /s /t 1")
