@@ -232,7 +232,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
     # copying files to avoid emory conflicts for parallel FSBO runs
     # copying the sorted folder
     to_copy_files1 = os.listdir(results_dir + 'trial_benchmark_sorted/')
-    target_dir1 = results_dir + 'trial_benchmark_sorted' + str(cc) + '/'
+    target_dir1 = root_dir + '/backups/' + 'trial_benchmark_sorted' + str(cc) + '/'
     if not os.path.exists(target_dir1):
         os.mkdir(target_dir1)
     for files in to_copy_files1:
@@ -240,13 +240,13 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
 
     # copying the original benchmark folder
     to_copy_files2 = os.listdir(root_dir + '/Final_benchmarks')
-    target_dir2 = root_dir + '/Final_benchmarks' + str(cc) + '/'
+    target_dir2 = root_dir + '/backups/Final_benchmarks' + str(cc) + '/'
     if not os.path.exists(target_dir2):
         os.mkdir(target_dir2)
     for files in to_copy_files2:
         shutil.copy(root_dir + '/Final_benchmarks/' + files, target_dir2)
 
-    parent_dir = root_dir + '/Final_benchmarks' + str(cc) + '/Running_'
+    parent_dir = target_dir2 + 'Running_'
 
     folders_split = np.array_split(total_data, n_split)
 
@@ -283,7 +283,7 @@ def fsbo_running(n_warm_start, n_iter, total_data, work_dir, fsbo_train_epochs, 
                                      dropout_rate=0.0,
                                      use_cnn=False)
 
-        model_path = root_dir + '/FSBO_backup' + str(cc) + '/'
+        model_path = root_dir + '/backups/FSBO_backup' + str(cc) + '/'
         if not os.path.exists(model_path):
             os.mkdir(model_path)
 
