@@ -21,3 +21,7 @@ Do mind the order of Hyperparameters that you need for your experiments!
 
 A shorter version of this benchmark, which contains only the Hyperparameters & Accuracy is stored in the "Sorted" folder. It is sorted with respect to the accuracy.
 
+"RS_sampled_configs" are the hyperparameters this benchmark contains.
+If you would like to contribute, please run "RS_sampled_configs_batch2" and extend this benchmark.
+
+
